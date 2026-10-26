@@ -1,4 +1,3 @@
-```markdown
 <div align="center">
 
 # NexusWarp
@@ -210,4 +209,3 @@ target/NexusWarp-1.0.jar
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-```
