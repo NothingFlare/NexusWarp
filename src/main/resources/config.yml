@@ -1,0 +1,65 @@
+# =======================================================
+#               NexusWarp Plugin Configuration
+# =======================================================
+
+# Language / Язык плагина
+# Supported: en, ru, zh, de, fr, es, pt, ja, uk, it, pl, tr, ko
+language: "ru"
+
+# Disabled worlds configuration / Настройка миров, в которых /tpa отключен
+# По умолчанию выключено (default: false)
+disabled-worlds:
+  # Enable world restriction / Включить ограничение по мирам
+  enabled: false
+
+  # Ignore bypass permission for OPs (true = OPs cannot bypass either)
+  # Игнорировать право обхода для операторов (true = у OP тоже запрещено)
+  ignore-bypass: true
+
+  # List of world names or environment types / Список отключенных миров или типов измерений
+  # Можно указывать как точное название мира, так и тип измерения:
+  #   - "world"        (название мира)
+  #   - "world_nether" (название мира)
+  #   - "NORMAL"       (по типу измерения - обычный мир)
+  #   - "NETHER"       (по типу измерения - ад)
+  #   - "THE_END"      (по типу измерения - край)
+  worlds:
+    - "world_nether"
+    - "world_the_end"
+    - "pvp_arena"
+
+# Teleportation request settings / Настройки запросов на телепортацию
+requests:
+  # Request expiration time in seconds (0 to disable expiration)
+  # Время действия запроса в секундах (0 - бессрочно)
+  timeout: 0
+
+  # Warmup delay before teleporting in seconds (0 = instant teleport)
+  # Задержка перед телепортацией в секундах (0 = мгновенно)
+  teleport-delay: 0
+
+  # Cancel teleportation if player moves during warmup
+  # Отменять телепортацию при движении во время задержки
+  cancel-on-movement: true
+
+  # Cancel teleportation if player takes damage during warmup
+  # Отменять телепортацию при получении урона во время задержки
+  cancel-on-damage: true
+
+# Safety checks before teleporting / Проверки безопасности перед телепортацией
+safe-teleport:
+  # Enable safety checks
+  # Включить проверку безопасности точки приземления
+  enabled: true
+
+  # Prevent teleporting into lava
+  # Запретить телепортацию в лаву
+  prevent-lava: true
+
+  # Prevent teleporting into the void
+  # Запретить телепортацию в пустоту
+  prevent-void: true
+
+  # Prevent suffocating in solid blocks
+  # Запретить телепортацию внутрь блоков (удушение)
+  prevent-suffocation: true

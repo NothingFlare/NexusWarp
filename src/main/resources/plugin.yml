@@ -1,0 +1,42 @@
+name: NexusWarp
+version: '${project.version}'
+main: me.nexuswarp.NexusWarpPlugin
+api-version: '1.20'
+folia-supported: true
+author: NothingFlare
+description: Universal high-performance TPA teleportation plugin for Paper, Purpur, Spigot, and Folia (1.20+)
+
+commands:
+  tpa:
+    description: Запросить телепортацию к игроку / Request teleportation to a player
+    usage: /tpa <player>
+    permission: nexuswarp.use
+  tpaccept:
+    description: Принять запрос на телепортацию / Accept teleportation request
+    usage: /tpaccept [player]
+    aliases: [tpyes]
+    permission: nexuswarp.use
+  tpacancel:
+    description: Отменить запрос на телепортацию / Cancel teleportation request
+    usage: /tpacancel [player]
+    aliases: [tpdeny, tpcancel, tpno]
+    permission: nexuswarp.use
+  nexuswarp:
+    description: Управление плагином NexusWarp / NexusWarp management command
+    usage: /nexuswarp [reload]
+    aliases: [nw, tpreload]
+    permission: nexuswarp.admin
+
+permissions:
+  nexuswarp.use:
+    description: Доступ ко всем базовым командам TPA / Access to base TPA commands
+    default: true
+  nexuswarp.bypass.world:
+    description: Обход запрета телепортации в отключенных мирах / Bypass disabled worlds
+    default: false
+  nexuswarp.bypass.delay:
+    description: Мгновенная телепортация без ожидания / Bypass teleport warmup delay
+    default: op
+  nexuswarp.admin:
+    description: Доступ к административным командам / Access to admin commands
+    default: op
