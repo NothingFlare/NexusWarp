@@ -30,9 +30,9 @@ economy:
   # Символ валюты
   currency-symbol: "$"
 
-  # Place currency symbol behind amount (e.g. 100$ vs $100)
-  # Размещать символ валюты позади числа (100$ вместо $100)
-  currency-symbol-placed-behind: false
+  # Place currency symbol behind amount (true = 500$, 500руб; false = $500, руб500)
+  # Размещать символ валюты позади числа (true = 500руб, false = руб500)
+  currency-symbol-placed-behind: true
 
   # Minimum amount allowed for /pay command
   # Минимальная сумма для перевода командой /pay

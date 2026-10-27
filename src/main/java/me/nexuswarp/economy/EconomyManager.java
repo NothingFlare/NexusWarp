@@ -52,7 +52,7 @@ public class EconomyManager {
     private BigDecimal minBalance = BigDecimal.ZERO;
     private BigDecimal maxBalance = new BigDecimal("10000000000000");
     private String currencySymbol = "$";
-    private boolean symbolBehind = false;
+    private boolean symbolBehind = true;
     private BigDecimal minimumPayAmount = new BigDecimal("0.01");
 
     // BalanceTop cache
@@ -74,7 +74,7 @@ public class EconomyManager {
         this.minBalance = new BigDecimal(plugin.getConfig().getString("economy.min-balance", "0.00"));
         this.maxBalance = new BigDecimal(plugin.getConfig().getString("economy.max-balance", "10000000000000.00"));
         this.currencySymbol = plugin.getConfig().getString("economy.currency-symbol", "$");
-        this.symbolBehind = plugin.getConfig().getBoolean("economy.currency-symbol-placed-behind", false);
+        this.symbolBehind = plugin.getConfig().getBoolean("economy.currency-symbol-placed-behind", true);
         this.minimumPayAmount = new BigDecimal(plugin.getConfig().getString("economy.minimum-pay-amount", "0.01"));
 
         loadAllDataAsync();
@@ -315,6 +315,9 @@ public class EconomyManager {
         symbols.setDecimalSeparator('.');
         DecimalFormat df = new DecimalFormat("#,##0.00", symbols);
         String formatted = df.format(amount);
+        if (formatted.endsWith(".00")) {
+            formatted = formatted.substring(0, formatted.length() - 3);
+        }
 
         if (symbolBehind) {
             return formatted + currencySymbol;

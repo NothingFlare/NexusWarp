@@ -172,8 +172,8 @@ economy:
   # Currency symbol displayed in messages
   currency-symbol: "$"
 
-  # Place currency symbol behind amount (e.g. 100$ vs $100)
-  currency-symbol-placed-behind: false
+  # Place currency symbol behind amount (e.g. 500$, 500руб vs $500, руб500)
+  currency-symbol-placed-behind: true
 
   # Minimum amount allowed for /pay command
   minimum-pay-amount: 0.01
