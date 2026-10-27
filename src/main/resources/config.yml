@@ -38,6 +38,28 @@ economy:
   # Минимальная сумма для перевода командой /pay
   minimum-pay-amount: 0.01
 
+# Spawn command configuration / Настройка точки спавна (/spawn)
+# By default disabled / По умолчанию выключено
+spawn:
+  enabled: false
+  world: "world"
+  x: 0.5
+  y: 64.0
+  z: 0.5
+  yaw: 0.0
+  pitch: 0.0
+
+# Hub command configuration / Настройка точки хаба (/hub)
+# By default disabled / По умолчанию выключено
+hub:
+  enabled: false
+  world: "world"
+  x: 0.5
+  y: 64.0
+  z: 0.5
+  yaw: 0.0
+  pitch: 0.0
+
 # Disabled worlds configuration / Настройка миров, в которых /tpa отключен
 # По умолчанию выключено (default: false)
 disabled-worlds:

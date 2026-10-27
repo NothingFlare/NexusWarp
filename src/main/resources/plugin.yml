@@ -61,6 +61,24 @@ commands:
     usage: /balancetop [page]
     aliases: [baltop]
     permission: nexuswarp.balancetop
+  spawn:
+    description: Телепортация на спавн / Teleport to spawn location
+    usage: /spawn [player]
+    permission: nexuswarp.spawn
+  hub:
+    description: Телепортация в хаб / Teleport to hub location
+    usage: /hub [player]
+    aliases: [lobby]
+    permission: nexuswarp.hub
+  setspawn:
+    description: Установить точку спавна / Set spawn location
+    usage: /setspawn
+    permission: nexuswarp.setspawn
+  sethub:
+    description: Установить точку хаба / Set hub location
+    usage: /sethub
+    aliases: [setlobby]
+    permission: nexuswarp.sethub
   nexuswarp:
     description: Управление плагином NexusWarp / NexusWarp management command
     usage: /nexuswarp [reload]
@@ -101,6 +119,24 @@ permissions:
   nexuswarp.balancetop:
     description: Доступ к просмотру топа богачей / Access to balance top
     default: true
+  nexuswarp.spawn:
+    description: Доступ к команде /spawn / Access to /spawn command
+    default: true
+  nexuswarp.spawn.others:
+    description: Телепортация других игроков на спавн / Teleport other players to spawn
+    default: op
+  nexuswarp.hub:
+    description: Доступ к команде /hub / Access to /hub command
+    default: true
+  nexuswarp.hub.others:
+    description: Телепортация других игроков в хаб / Teleport other players to hub
+    default: op
+  nexuswarp.setspawn:
+    description: Установка точки спавна / Access to /setspawn command
+    default: op
+  nexuswarp.sethub:
+    description: Установка точки хаба / Access to /sethub command
+    default: op
   nexuswarp.bypass.world:
     description: Обход запрета телепортации в отключенных мирах / Bypass disabled worlds
     default: false

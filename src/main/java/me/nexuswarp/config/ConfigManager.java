@@ -1,6 +1,8 @@
 package me.nexuswarp.config;
 
 import me.nexuswarp.NexusWarpPlugin;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -26,6 +28,22 @@ public class ConfigManager {
     private boolean preventLava;
     private boolean preventVoid;
     private boolean preventSuffocation;
+
+    private boolean spawnEnabled;
+    private String spawnWorld;
+    private double spawnX;
+    private double spawnY;
+    private double spawnZ;
+    private float spawnYaw;
+    private float spawnPitch;
+
+    private boolean hubEnabled;
+    private String hubWorld;
+    private double hubX;
+    private double hubY;
+    private double hubZ;
+    private float hubYaw;
+    private float hubPitch;
 
     public ConfigManager(NexusWarpPlugin plugin) {
         this.plugin = plugin;
@@ -59,6 +77,24 @@ public class ConfigManager {
         this.preventLava = config.getBoolean("safe-teleport.prevent-lava", true);
         this.preventVoid = config.getBoolean("safe-teleport.prevent-void", true);
         this.preventSuffocation = config.getBoolean("safe-teleport.prevent-suffocation", true);
+
+        // Spawn
+        this.spawnEnabled = config.getBoolean("spawn.enabled", false);
+        this.spawnWorld = config.getString("spawn.world", "world");
+        this.spawnX = config.getDouble("spawn.x", 0.5);
+        this.spawnY = config.getDouble("spawn.y", 64.0);
+        this.spawnZ = config.getDouble("spawn.z", 0.5);
+        this.spawnYaw = (float) config.getDouble("spawn.yaw", 0.0);
+        this.spawnPitch = (float) config.getDouble("spawn.pitch", 0.0);
+
+        // Hub
+        this.hubEnabled = config.getBoolean("hub.enabled", false);
+        this.hubWorld = config.getString("hub.world", "world");
+        this.hubX = config.getDouble("hub.x", 0.5);
+        this.hubY = config.getDouble("hub.y", 64.0);
+        this.hubZ = config.getDouble("hub.z", 0.5);
+        this.hubYaw = (float) config.getDouble("hub.yaw", 0.0);
+        this.hubPitch = (float) config.getDouble("hub.pitch", 0.0);
     }
 
     public boolean isWorldDisabled(World world) {
@@ -123,5 +159,75 @@ public class ConfigManager {
 
     public boolean isPreventSuffocation() {
         return preventSuffocation;
+    }
+
+    public boolean isSpawnEnabled() {
+        return spawnEnabled;
+    }
+
+    public String getSpawnWorldName() {
+        return spawnWorld;
+    }
+
+    public Location getSpawnLocation() {
+        World world = Bukkit.getWorld(spawnWorld);
+        if (world == null) return null;
+        return new Location(world, spawnX, spawnY, spawnZ, spawnYaw, spawnPitch);
+    }
+
+    public void setSpawnLocation(Location loc) {
+        if (loc == null || loc.getWorld() == null) return;
+        this.spawnEnabled = true;
+        this.spawnWorld = loc.getWorld().getName();
+        this.spawnX = Math.round(loc.getX() * 100.0) / 100.0;
+        this.spawnY = Math.round(loc.getY() * 100.0) / 100.0;
+        this.spawnZ = Math.round(loc.getZ() * 100.0) / 100.0;
+        this.spawnYaw = Math.round(loc.getYaw() * 10.0f) / 10.0f;
+        this.spawnPitch = Math.round(loc.getPitch() * 10.0f) / 10.0f;
+
+        FileConfiguration config = plugin.getConfig();
+        config.set("spawn.enabled", true);
+        config.set("spawn.world", spawnWorld);
+        config.set("spawn.x", spawnX);
+        config.set("spawn.y", spawnY);
+        config.set("spawn.z", spawnZ);
+        config.set("spawn.yaw", spawnYaw);
+        config.set("spawn.pitch", spawnPitch);
+        plugin.saveConfig();
+    }
+
+    public boolean isHubEnabled() {
+        return hubEnabled;
+    }
+
+    public String getHubWorldName() {
+        return hubWorld;
+    }
+
+    public Location getHubLocation() {
+        World world = Bukkit.getWorld(hubWorld);
+        if (world == null) return null;
+        return new Location(world, hubX, hubY, hubZ, hubYaw, hubPitch);
+    }
+
+    public void setHubLocation(Location loc) {
+        if (loc == null || loc.getWorld() == null) return;
+        this.hubEnabled = true;
+        this.hubWorld = loc.getWorld().getName();
+        this.hubX = Math.round(loc.getX() * 100.0) / 100.0;
+        this.hubY = Math.round(loc.getY() * 100.0) / 100.0;
+        this.hubZ = Math.round(loc.getZ() * 100.0) / 100.0;
+        this.hubYaw = Math.round(loc.getYaw() * 10.0f) / 10.0f;
+        this.hubPitch = Math.round(loc.getPitch() * 10.0f) / 10.0f;
+
+        FileConfiguration config = plugin.getConfig();
+        config.set("hub.enabled", true);
+        config.set("hub.world", hubWorld);
+        config.set("hub.x", hubX);
+        config.set("hub.y", hubY);
+        config.set("hub.z", hubZ);
+        config.set("hub.yaw", hubYaw);
+        config.set("hub.pitch", hubPitch);
+        plugin.saveConfig();
     }
 }

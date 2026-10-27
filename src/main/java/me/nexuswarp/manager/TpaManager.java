@@ -186,6 +186,56 @@ public class TpaManager {
         });
     }
 
+    public void teleportWithWarmup(Player player, Location targetLocation, String successMessageKey) {
+        if (player == null || !player.isOnline()) return;
+
+        int delay = plugin.getConfigManager().getTeleportDelay();
+        if (delay > 0 && !player.hasPermission("nexuswarp.bypass.delay")) {
+            cancelWarmup(player.getUniqueId(), false);
+
+            warmupLocations.put(player.getUniqueId(), player.getLocation().clone());
+            player.sendMessage(plugin.getLanguageManager().getMessage("teleport_delay", "seconds", String.valueOf(delay)));
+
+            UUID playerId = player.getUniqueId();
+            ServerScheduler.TaskHandle task = ServerScheduler.runOnPlayerDelayed(plugin, player, () -> {
+                activeWarmups.remove(playerId);
+                warmupLocations.remove(playerId);
+
+                if (!player.isOnline()) return;
+
+                ServerScheduler.teleportAsync(player, targetLocation).thenAccept(success -> {
+                    if (success) {
+                        ServerScheduler.runOnPlayer(plugin, player, () -> {
+                            if (successMessageKey != null && !successMessageKey.isEmpty()) {
+                                player.sendMessage(plugin.getLanguageManager().getMessage(successMessageKey));
+                            }
+                        });
+                    } else {
+                        ServerScheduler.runOnPlayer(plugin, player, () -> {
+                            player.sendMessage(plugin.getLanguageManager().getMessage("teleport_unsafe"));
+                        });
+                    }
+                });
+            }, delay * 20L);
+
+            activeWarmups.put(playerId, task);
+        } else {
+            ServerScheduler.teleportAsync(player, targetLocation).thenAccept(success -> {
+                if (success) {
+                    ServerScheduler.runOnPlayer(plugin, player, () -> {
+                        if (successMessageKey != null && !successMessageKey.isEmpty()) {
+                            player.sendMessage(plugin.getLanguageManager().getMessage(successMessageKey));
+                        }
+                    });
+                } else {
+                    ServerScheduler.runOnPlayer(plugin, player, () -> {
+                        player.sendMessage(plugin.getLanguageManager().getMessage("teleport_unsafe"));
+                    });
+                }
+            });
+        }
+    }
+
     public void cancelRequest(Player player, String otherPlayerName) {
         if (player == null || !player.isOnline()) return;
 

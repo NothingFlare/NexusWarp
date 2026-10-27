@@ -43,6 +43,8 @@ Starting with version 1.2, NexusWarp incorporates a full Essentials-grade Econom
   - Interactive TPA requests with clickable chat buttons (`[Accept]`, `[Cancel]`) and tooltips.
   - Direct administrative teleportation (`/tp <player>`, `/tp <player> <target>`, `/tp <x> <y> <z>`, `/tp <player> <x> <y> <z>`).
   - Player summoning teleportation (`/tphere <player>`, aliases `/s`, `/tph`).
+  - Independent `/spawn` and `/hub` (alias `/lobby`) commands with configurable world, coordinates, yaw, and pitch. Both commands are disabled by default (`enabled: false`) in `config.yml`.
+  - Administrative setup commands (`/setspawn`, `/sethub`) to instantly configure destinations in-game.
   - All administrative teleportation permissions (`nexuswarp.tp`, `nexuswarp.tphere`) are disabled by default (`default: false`) for explicit management via LuckPerms.
 
 - **Private Messaging System (`/msg` & `/reply`)**
@@ -96,6 +98,10 @@ Starting with version 1.2, NexusWarp incorporates a full Essentials-grade Econom
 | `/tpacancel [player]` | `/tpdeny`, `/tpcancel`, `/tpno` | Cancels an active request (usable by sender or recipient) | `nexuswarp.use` (`true`) |
 | `/tp <player> [target]` | None | Teleports to a player, target to target, or to coordinates | `nexuswarp.tp` (`false`) |
 | `/tphere <player>` | `/s`, `/tph` | Teleports a player to your location | `nexuswarp.tphere` (`false`) |
+| `/spawn [player]` | None | Teleports to the spawn location | `nexuswarp.spawn` (`true`) |
+| `/hub [player]` | `/lobby` | Teleports to the hub location | `nexuswarp.hub` (`true`) |
+| `/setspawn` | None | Sets the spawn point to your current position | `nexuswarp.setspawn` (`op`) |
+| `/sethub` | `/setlobby` | Sets the hub point to your current position | `nexuswarp.sethub` (`op`) |
 | `/msg <player> <message>` | `/w`, `/tell`, `/m`, `/whisper` | Sends a private message to a player | `nexuswarp.msg` (`true`) |
 | `/reply <message>` | `/r` | Replies to the last player who messaged you | `nexuswarp.msg` (`true`) |
 | `/nexuswarp reload` | `/nw`, `/tpreload` | Asynchronously reloads configuration and language files | `nexuswarp.admin` (`op`) |
@@ -117,6 +123,12 @@ Starting with version 1.2, NexusWarp incorporates a full Essentials-grade Econom
 | `nexuswarp.msg` | Grants access to private messaging (`/msg`, `/reply`) | `true` (all players) |
 | `nexuswarp.tp` | Grants access to direct teleportation (`/tp`) | `false` (configure via LuckPerms) |
 | `nexuswarp.tphere` | Grants access to summoning teleportation (`/tphere`, `/s`, `/tph`) | `false` (configure via LuckPerms) |
+| `nexuswarp.spawn` | Allows using the `/spawn` command | `true` (all players) |
+| `nexuswarp.spawn.others` | Allows sending other players to spawn | `op` |
+| `nexuswarp.hub` | Allows using the `/hub` command | `true` (all players) |
+| `nexuswarp.hub.others` | Allows sending other players to hub | `op` |
+| `nexuswarp.setspawn` | Allows setting the spawn location via `/setspawn` | `op` |
+| `nexuswarp.sethub` | Allows setting the hub location via `/sethub` | `op` |
 | `nexuswarp.balance` | Allows checking own balance via `/balance` | `true` (all players) |
 | `nexuswarp.balance.others` | Allows checking other players' balances via `/balance <player>` | `op` |
 | `nexuswarp.pay` | Allows sending payments via `/pay` | `true` (all players) |
@@ -165,6 +177,28 @@ economy:
 
   # Minimum amount allowed for /pay command
   minimum-pay-amount: 0.01
+
+# Spawn command configuration
+# Disabled by default
+spawn:
+  enabled: false
+  world: "world"
+  x: 0.5
+  y: 64.0
+  z: 0.5
+  yaw: 0.0
+  pitch: 0.0
+
+# Hub command configuration
+# Disabled by default
+hub:
+  enabled: false
+  world: "world"
+  x: 0.5
+  y: 64.0
+  z: 0.5
+  yaw: 0.0
+  pitch: 0.0
 
 # Disabled worlds configuration
 disabled-worlds:

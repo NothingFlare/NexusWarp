@@ -1,8 +1,12 @@
 package me.nexuswarp;
 
+import me.nexuswarp.command.HubCommand;
 import me.nexuswarp.command.MsgCommand;
 import me.nexuswarp.command.NexusWarpCommand;
 import me.nexuswarp.command.ReplyCommand;
+import me.nexuswarp.command.SetHubCommand;
+import me.nexuswarp.command.SetSpawnCommand;
+import me.nexuswarp.command.SpawnCommand;
 import me.nexuswarp.command.TpAcceptCommand;
 import me.nexuswarp.command.TpCancelCommand;
 import me.nexuswarp.command.TpCommand;
@@ -119,6 +123,12 @@ public class NexusWarpPlugin extends JavaPlugin {
         registerCommand("balance", new BalanceCommand(this));
         registerCommand("pay", new PayCommand(this));
         registerCommand("balancetop", new BalanceTopCommand(this));
+
+        // Spawn & Hub commands
+        registerCommand("spawn", new SpawnCommand(this));
+        registerCommand("hub", new HubCommand(this));
+        registerCommand("setspawn", new SetSpawnCommand(this));
+        registerCommand("sethub", new SetHubCommand(this));
 
         // Admin command
         registerCommand("nexuswarp", new NexusWarpCommand(this));
