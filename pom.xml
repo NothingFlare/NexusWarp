@@ -6,7 +6,7 @@
 
     <groupId>me.nexuswarp</groupId>
     <artifactId>NexusWarp</artifactId>
-    <version>1.0</version>
+    <version>1.2</version>
     <packaging>jar</packaging>
 
     <name>NexusWarp</name>

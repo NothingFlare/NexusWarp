@@ -37,3 +37,17 @@ usage_tpa: "&c사용법: &e/tpa <플레이어>"
 usage_tpaccept: "&c사용법: &e/tpaccept [플레이어]"
 usage_tpacancel: "&c사용법: &e/tpacancel [플레이어]"
 usage_admin: "&c사용법: &e/nexuswarp reload"
+
+
+# New commands: /tp, /msg, /reply
+usage_tp: "&c사용법: &e/tp <플레이어> [대상] &c또는 &e/tp [플레이어] <x> <y> <z>"
+usage_msg: "&c사용법: &e/msg <플레이어> <메시지>"
+usage_reply: "&c사용법: &e/reply <메시지>"
+cannot_msg_self: "&c자기 자신에게는 귓속말을 보낼 수 없습니다!"
+no_reply_target: "&c답장할 상대가 없습니다!"
+msg_format_send: "&6[&e나 &6-> &e{receiver}&6] &f{message}"
+msg_format_receive: "&6[&e{sender} &6-> &e나&6] &f{message}"
+teleport_success: "&a&6{player}&a 님에게 순간이동했습니다."
+teleport_success_other: "&a&6{player}&a 님을 &6{target}&a 님에게 순간이동시켰습니다."
+teleport_success_coords: "&a좌표 &6{x}&a, &6{y}&a, &6{z}&a (으)로 순간이동했습니다."
+invalid_coordinates: "&c잘못된 좌표입니다!"

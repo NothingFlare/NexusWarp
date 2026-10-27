@@ -37,3 +37,17 @@ usage_tpa: "&c用法: &e/tpa <玩家>"
 usage_tpaccept: "&c用法: &e/tpaccept [玩家]"
 usage_tpacancel: "&c用法: &e/tpacancel [玩家]"
 usage_admin: "&c用法: &e/nexuswarp reload"
+
+
+# New commands: /tp, /msg, /reply
+usage_tp: "&c用法: &e/tp <玩家> [目标] &c或 &e/tp [玩家] <x> <y> <z>"
+usage_msg: "&c用法: &e/msg <玩家> <消息>"
+usage_reply: "&c用法: &e/reply <消息>"
+cannot_msg_self: "&c你不能给自己发送私聊消息！"
+no_reply_target: "&c你当前没有人可以回复！"
+msg_format_send: "&6[&e我 &6-> &e{receiver}&6] &f{message}"
+msg_format_receive: "&6[&e{sender} &6-> &e我&6] &f{message}"
+teleport_success: "&a已传送到玩家 &6{player}&a。"
+teleport_success_other: "&a已将玩家 &6{player} &a传送到 &6{target}&a。"
+teleport_success_coords: "&a已传送到坐标: &6{x}&a, &6{y}&a, &6{z}&a。"
+invalid_coordinates: "&c指定的坐标无效！"

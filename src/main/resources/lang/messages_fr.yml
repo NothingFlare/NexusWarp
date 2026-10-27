@@ -37,3 +37,17 @@ usage_tpa: "&cUtilisation: &e/tpa <joueur>"
 usage_tpaccept: "&cUtilisation: &e/tpaccept [joueur]"
 usage_tpacancel: "&cUtilisation: &e/tpacancel [joueur]"
 usage_admin: "&cUtilisation: &e/nexuswarp reload"
+
+
+# New commands: /tp, /msg, /reply
+usage_tp: "&cUtilisation: &e/tp <joueur> [cible] &cou &e/tp [joueur] <x> <y> <z>"
+usage_msg: "&cUtilisation: &e/msg <joueur> <message>"
+usage_reply: "&cUtilisation: &e/reply <message>"
+cannot_msg_self: "&cVous ne pouvez pas vous envoyer de message à vous-même !"
+no_reply_target: "&cVous n'avez personne à qui répondre !"
+msg_format_send: "&6[&eMoi &6-> &e{receiver}&6] &f{message}"
+msg_format_receive: "&6[&e{sender} &6-> &eMoi&6] &f{message}"
+teleport_success: "&aTéléporté vers &6{player}&a."
+teleport_success_other: "&aLe joueur &6{player} &aa été téléporté vers &6{target}&a."
+teleport_success_coords: "&aTéléporté aux coordonnées: &6{x}&a, &6{y}&a, &6{z}&a."
+invalid_coordinates: "&cCoordonnées invalides !"

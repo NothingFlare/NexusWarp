@@ -2,12 +2,12 @@
 
 # NexusWarp
 
-**A lightweight, high-performance teleportation request (TPA) plugin for Paper, Purpur, Spigot, and Folia.**
+**A lightweight, high-performance teleportation (TPA) & private messaging plugin for Paper, Purpur, Spigot, and Folia.**
 
 [![Minecraft Version](https://img.shields.io/badge/Minecraft-1.20+-2b2b2b.svg?style=flat-square)](https://papermc.io)
 [![Java Version](https://img.shields.io/badge/Java-17+-2b2b2b.svg?style=flat-square)](https://www.oracle.com/java/)
 [![Folia](https://img.shields.io/badge/Folia-Supported-2b2b2b.svg?style=flat-square)](https://papermc.io/software/folia)
-[![Release](https://img.shields.io/badge/Release-1.0-2b2b2b.svg?style=flat-square)]()
+[![Release](https://img.shields.io/badge/Release-1.2-2b2b2b.svg?style=flat-square)]()
 [![License](https://img.shields.io/badge/License-MIT-2b2b2b.svg?style=flat-square)](LICENSE)
 
 [Overview](#overview) • [Key Features](#key-features) • [Compatibility](#compatibility) • [Commands and Permissions](#commands-and-permissions) • [Configuration](#configuration) • [Localization](#localization) • [Installation](#installation) • [Compiling from Source](#compiling-from-source)
@@ -18,9 +18,9 @@
 
 ## Overview
 
-NexusWarp is an optimized teleportation request (TPA) solution designed specifically for modern Minecraft server software. Standard Bukkit/Spigot teleportation implementations often suffer from synchronous chunk loading spikes and thread safety violations on multi-threaded servers. NexusWarp addresses these architectural limitations by fully supporting Folia's regional schedulers alongside Paper's asynchronous chunk loading pipelines.
+NexusWarp is an optimized teleportation and communication solution designed specifically for modern Minecraft server software. Standard Bukkit/Spigot teleportation implementations often suffer from synchronous chunk loading spikes and thread safety violations on multi-threaded servers. NexusWarp addresses these architectural limitations by fully supporting Folia's regional schedulers alongside Paper's asynchronous chunk loading pipelines.
 
-The plugin provides interactive clickable chat components, strict destination safety checks, granular world and dimension restrictions, and native support for 13 languages without external dependencies.
+The plugin provides interactive clickable chat components, direct administrative teleportation (`/tp`), private messaging (`/msg` and `/reply`), destination safety validation, granular world and dimension restrictions, and native support for 13 languages without external dependencies.
 
 ---
 
@@ -34,6 +34,15 @@ The plugin provides interactive clickable chat components, strict destination sa
 - **Interactive Text Components**
   - Incoming requests render interactive `[Accept]` and `[Cancel]` buttons directly in the chat.
   - Hover tooltips and instant command execution prevent command injection risks and eliminate the need for console commands.
+
+- **Direct Teleportation (`/tp`)**
+  - Instant teleportation to players or coordinates (`/tp <player>`, `/tp <player> <target>`, `/tp <x> <y> <z>`).
+  - Permission is disabled by default (`default: false`), designed to be granted via LuckPerms.
+
+- **Private Messaging System (`/msg` & `/reply`)**
+  - Fast, thread-safe direct messaging between players and console.
+  - Quick reply functionality (`/r <message>`) tracking conversation partners.
+  - Available to all players by default (`default: true`).
 
 - **Safe Landing Validation**
   - Pre-teleport verification scans the destination environment before moving the player.
@@ -75,13 +84,18 @@ The plugin provides interactive clickable chat components, strict destination sa
 | `/tpa <player>` | None | Sends a teleportation request to the specified player | `nexuswarp.use` |
 | `/tpaccept [player]` | `/tpyes` | Accepts an active incoming teleportation request | `nexuswarp.use` |
 | `/tpacancel [player]` | `/tpdeny`, `/tpcancel`, `/tpno` | Cancels an active request (usable by sender or recipient) | `nexuswarp.use` |
+| `/tp <player> [target]` | None | Teleports to a player or coordinates | `nexuswarp.tp` |
+| `/msg <player> <message>` | `/w`, `/tell`, `/m`, `/whisper` | Sends a private message to a player | `nexuswarp.msg` |
+| `/reply <message>` | `/r` | Replies to the last player who messaged you | `nexuswarp.msg` |
 | `/nexuswarp reload` | `/nw`, `/tpreload` | Asynchronously reloads configuration and language files | `nexuswarp.admin` |
 
 ### Permissions
 
 | Node | Description | Default Assignment |
 | :--- | :--- | :--- |
-| `nexuswarp.use` | Grants access to standard player commands (`/tpa`, `/tpaccept`, `/tpacancel`) | `true` (all players) |
+| `nexuswarp.use` | Grants access to standard player TPA commands (`/tpa`, `/tpaccept`, `/tpacancel`) | `true` (all players) |
+| `nexuswarp.msg` | Grants access to private messaging (`/msg`, `/reply`) | `true` (all players) |
+| `nexuswarp.tp` | Grants access to direct teleportation (`/tp`) — configure via LuckPerms | `false` (no one by default) |
 | `nexuswarp.bypass.world` | Bypasses world and dimension restrictions | `false` |
 | `nexuswarp.bypass.delay` | Bypasses the teleportation warmup delay | `op` |
 | `nexuswarp.admin` | Grants access to administrative commands (`/nexuswarp reload`) | `op` |
@@ -176,7 +190,7 @@ Pre-configured language files are located in `plugins/NexusWarp/lang/`:
 
 ## Installation
 
-1. Download `NexusWarp-1.0.jar` from the release section.
+1. Download `NexusWarp-1.2.jar` from the release section.
 2. Place the file into your server's `plugins/` directory.
 3. Start or reload the server to generate default files.
 4. Adjust `plugins/NexusWarp/config.yml` according to your server requirements.
@@ -194,14 +208,14 @@ Pre-configured language files are located in `plugins/NexusWarp/lang/`:
 ### Build Instructions
 
 ```bash
-git clone https://github.com/your-username/NexusWarp.git
+git clone https://github.com/NothingFlare/NexusWarp.git
 cd NexusWarp
 mvn clean package
 ```
 
 The resulting binary will be located in:
 ```text
-target/NexusWarp-1.0.jar
+target/NexusWarp-1.2.jar
 ```
 
 ---

@@ -37,3 +37,17 @@ usage_tpa: "&cKullanım: &e/tpa <oyuncu>"
 usage_tpaccept: "&cKullanım: &e/tpaccept [oyuncu]"
 usage_tpacancel: "&cKullanım: &e/tpacancel [oyuncu]"
 usage_admin: "&cKullanım: &e/nexuswarp reload"
+
+
+# New commands: /tp, /msg, /reply
+usage_tp: "&cKullanım: &e/tp <oyuncu> [hedef] &cveya &e/tp [oyuncu] <x> <y> <z>"
+usage_msg: "&cKullanım: &e/msg <oyuncu> <mesaj>"
+usage_reply: "&cKullanım: &e/reply <mesaj>"
+cannot_msg_self: "&cKendinize özel mesaj gönderemezsiniz!"
+no_reply_target: "&cCevap verilecek kimse bulunamadı!"
+msg_format_send: "&6[&eBen &6-> &e{receiver}&6] &f{message}"
+msg_format_receive: "&6[&e{sender} &6-> &eBen&6] &f{message}"
+teleport_success: "&a&6{player} &aadlı oyuncuya ışınlandınız."
+teleport_success_other: "&a&6{player} &aadlı oyuncu &6{target} &aadlı oyuncuya ışınlandı."
+teleport_success_coords: "&aKoordinatlara ışınlanıldı: &6{x}&a, &6{y}&a, &6{z}&a."
+invalid_coordinates: "&cGeçersiz koordinatlar girildi!"

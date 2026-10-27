@@ -1,12 +1,16 @@
 package me.nexuswarp;
 
+import me.nexuswarp.command.MsgCommand;
 import me.nexuswarp.command.NexusWarpCommand;
+import me.nexuswarp.command.ReplyCommand;
 import me.nexuswarp.command.TpAcceptCommand;
 import me.nexuswarp.command.TpCancelCommand;
+import me.nexuswarp.command.TpCommand;
 import me.nexuswarp.command.TpaCommand;
 import me.nexuswarp.config.ConfigManager;
 import me.nexuswarp.config.LanguageManager;
 import me.nexuswarp.listener.PlayerEventListener;
+import me.nexuswarp.manager.MessageManager;
 import me.nexuswarp.manager.TpaManager;
 import me.nexuswarp.util.ServerScheduler;
 import org.bukkit.Bukkit;
@@ -20,6 +24,7 @@ public class NexusWarpPlugin extends JavaPlugin {
     private ConfigManager configManager;
     private LanguageManager languageManager;
     private TpaManager tpaManager;
+    private MessageManager messageManager;
 
     private ServerScheduler.TaskHandle tickerTask;
 
@@ -34,8 +39,9 @@ public class NexusWarpPlugin extends JavaPlugin {
         this.languageManager = new LanguageManager(this);
         this.languageManager.load();
 
-        // Initialize TPA Manager
+        // Initialize Managers
         this.tpaManager = new TpaManager(this);
+        this.messageManager = new MessageManager(this);
 
         // Register event listener
         Bukkit.getPluginManager().registerEvents(new PlayerEventListener(this), this);
@@ -72,6 +78,27 @@ public class NexusWarpPlugin extends JavaPlugin {
         if (tpacancel != null) {
             tpacancel.setExecutor(tpCancelCmd);
             tpacancel.setTabCompleter(tpCancelCmd);
+        }
+
+        TpCommand tpCmd = new TpCommand(this);
+        PluginCommand tp = getCommand("tp");
+        if (tp != null) {
+            tp.setExecutor(tpCmd);
+            tp.setTabCompleter(tpCmd);
+        }
+
+        MsgCommand msgCmd = new MsgCommand(this);
+        PluginCommand msg = getCommand("msg");
+        if (msg != null) {
+            msg.setExecutor(msgCmd);
+            msg.setTabCompleter(msgCmd);
+        }
+
+        ReplyCommand replyCmd = new ReplyCommand(this);
+        PluginCommand reply = getCommand("reply");
+        if (reply != null) {
+            reply.setExecutor(replyCmd);
+            reply.setTabCompleter(replyCmd);
         }
 
         NexusWarpCommand nwCmd = new NexusWarpCommand(this);
@@ -147,5 +174,9 @@ public class NexusWarpPlugin extends JavaPlugin {
 
     public TpaManager getTpaManager() {
         return tpaManager;
+    }
+
+    public MessageManager getMessageManager() {
+        return messageManager;
     }
 }

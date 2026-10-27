@@ -37,3 +37,17 @@ usage_tpa: "&c使用方法: &e/tpa <プレイヤー名>"
 usage_tpaccept: "&c使用方法: &e/tpaccept [プレイヤー名]"
 usage_tpacancel: "&c使用方法: &e/tpacancel [プレイヤー名]"
 usage_admin: "&c使用方法: &e/nexuswarp reload"
+
+
+# New commands: /tp, /msg, /reply
+usage_tp: "&c使用方法: &e/tp <プレイヤー> [対象] &cまたは &e/tp [プレイヤー] <x> <y> <z>"
+usage_msg: "&c使用方法: &e/msg <プレイヤー> <メッセージ>"
+usage_reply: "&c使用方法: &e/reply <メッセージ>"
+cannot_msg_self: "&c自分自身にプライベートメッセージを送信することはできません！"
+no_reply_target: "&c返信できる相手がいません！"
+msg_format_send: "&6[&e自分 &6-> &e{receiver}&6] &f{message}"
+msg_format_receive: "&6[&e{sender} &6-> &e自分&6] &f{message}"
+teleport_success: "&a&6{player} &aにテレポートしました。"
+teleport_success_other: "&aプレイヤー &6{player} &aを &6{target} &aにテレポートさせました。"
+teleport_success_coords: "&a座標 &6{x}&a, &6{y}&a, &6{z} &aにテレポートしました。"
+invalid_coordinates: "&c指定された座標が無効です！"

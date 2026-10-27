@@ -37,3 +37,17 @@ usage_tpa: "&cUżycie: &e/tpa <gracz>"
 usage_tpaccept: "&cUżycie: &e/tpaccept [gracz]"
 usage_tpacancel: "&cUżycie: &e/tpacancel [gracz]"
 usage_admin: "&cUżycie: &e/nexuswarp reload"
+
+
+# New commands: /tp, /msg, /reply
+usage_tp: "&cUżycie: &e/tp <gracz> [cel] &club &e/tp [gracz] <x> <y> <z>"
+usage_msg: "&cUżycie: &e/msg <gracz> <wiadomość>"
+usage_reply: "&cUżycie: &e/reply <wiadomość>"
+cannot_msg_self: "&cNie możesz wysyłać wiadomości prywatnych do samego siebie!"
+no_reply_target: "&cNie masz komu odpowiedzieć!"
+msg_format_send: "&6[&eJa &6-> &e{receiver}&6] &f{message}"
+msg_format_receive: "&6[&e{sender} &6-> &eJa&6] &f{message}"
+teleport_success: "&aPrzeteleportowano do &6{player}&a."
+teleport_success_other: "&aGracz &6{player} &azostał przeteleportowany do &6{target}&a."
+teleport_success_coords: "&aPrzeteleportowano na współrzędne: &6{x}&a, &6{y}&a, &6{z}&a."
+invalid_coordinates: "&cPodano nieprawidłowe współrzędne!"

@@ -4,7 +4,7 @@ main: me.nexuswarp.NexusWarpPlugin
 api-version: '1.20'
 folia-supported: true
 author: NothingFlare
-description: Universal high-performance TPA teleportation plugin for Paper, Purpur, Spigot, and Folia (1.20+)
+description: Universal high-performance TPA & Messaging plugin for Paper, Purpur, Spigot, and Folia (1.20+)
 
 commands:
   tpa:
@@ -21,6 +21,20 @@ commands:
     usage: /tpacancel [player]
     aliases: [tpdeny, tpcancel, tpno]
     permission: nexuswarp.use
+  tp:
+    description: Мгновенная телепортация к игроку или координатам / Teleport to a player or coordinates
+    usage: /tp <player> [target] | /tp [player] <x> <y> <z>
+    permission: nexuswarp.tp
+  msg:
+    description: Отправить личное сообщение / Send a private message
+    usage: /msg <player> <message>
+    aliases: [w, tell, m, whisper]
+    permission: nexuswarp.msg
+  reply:
+    description: Быстрый ответ на личное сообщение / Reply to the last private message
+    usage: /reply <message>
+    aliases: [r]
+    permission: nexuswarp.msg
   nexuswarp:
     description: Управление плагином NexusWarp / NexusWarp management command
     usage: /nexuswarp [reload]
@@ -31,6 +45,12 @@ permissions:
   nexuswarp.use:
     description: Доступ ко всем базовым командам TPA / Access to base TPA commands
     default: true
+  nexuswarp.msg:
+    description: Доступ к отправке личных сообщений / Access to private messaging
+    default: true
+  nexuswarp.tp:
+    description: Доступ к прямой телепортации (выдается через LuckPerms) / Access to direct teleportation
+    default: false
   nexuswarp.bypass.world:
     description: Обход запрета телепортации в отключенных мирах / Bypass disabled worlds
     default: false

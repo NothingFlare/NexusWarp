@@ -23,11 +23,13 @@ public class PlayerEventListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {
         plugin.getTpaManager().handlePlayerQuit(event.getPlayer());
+        plugin.getMessageManager().removePlayer(event.getPlayer().getUniqueId());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onKick(PlayerKickEvent event) {
         plugin.getTpaManager().handlePlayerQuit(event.getPlayer());
+        plugin.getMessageManager().removePlayer(event.getPlayer().getUniqueId());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
