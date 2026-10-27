@@ -7,7 +7,7 @@
 [![Minecraft Version](https://img.shields.io/badge/Minecraft-1.20+-2b2b2b.svg?style=flat-square)](https://papermc.io)
 [![Java Version](https://img.shields.io/badge/Java-17+-2b2b2b.svg?style=flat-square)](https://www.oracle.com/java/)
 [![Folia](https://img.shields.io/badge/Folia-Supported-2b2b2b.svg?style=flat-square)](https://papermc.io/software/folia)
-[![Release](https://img.shields.io/badge/Release-1.2-2b2b2b.svg?style=flat-square)]()
+[![Release](https://img.shields.io/badge/Release-1.1-2b2b2b.svg?style=flat-square)]()
 [![License](https://img.shields.io/badge/License-MIT-2b2b2b.svg?style=flat-square)](LICENSE)
 
 [Overview](#overview) • [Key Features](#key-features) • [Compatibility](#compatibility) • [Commands and Permissions](#commands-and-permissions) • [Configuration](#configuration) • [Localization](#localization) • [Installation](#installation) • [Compiling from Source](#compiling-from-source)
@@ -190,7 +190,7 @@ Pre-configured language files are located in `plugins/NexusWarp/lang/`:
 
 ## Installation
 
-1. Download `NexusWarp-1.2.jar` from the release section.
+1. Download `NexusWarp-1.1.jar` from the release section.
 2. Place the file into your server's `plugins/` directory.
 3. Start or reload the server to generate default files.
 4. Adjust `plugins/NexusWarp/config.yml` according to your server requirements.
@@ -215,7 +215,7 @@ mvn clean package
 
 The resulting binary will be located in:
 ```text
-target/NexusWarp-1.2.jar
+target/NexusWarp-1.1.jar
 ```
 
 ---
