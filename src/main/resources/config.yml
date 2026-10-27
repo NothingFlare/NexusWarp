@@ -6,6 +6,38 @@
 # Supported: en, ru, zh, de, fr, es, pt, ja, uk, it, pl, tr, ko
 language: "ru"
 
+# Updates configuration / Проверка обновлений
+updates:
+  # Check for updates on startup via GitHub
+  # Проверять наличие обновлений на GitHub при запуске
+  check-for-updates: true
+
+# Economy configuration / Настройка экономики
+economy:
+  # Initial balance for newly registered players
+  # Стартовый баланс для новых игроков
+  starting-balance: 0.00
+
+  # Minimum allowable balance
+  # Минимально допустимый баланс
+  min-balance: 0.00
+
+  # Maximum allowable balance
+  # Максимально допустимый баланс
+  max-balance: 10000000000000.00
+
+  # Currency symbol displayed in messages
+  # Символ валюты
+  currency-symbol: "$"
+
+  # Place currency symbol behind amount (e.g. 100$ vs $100)
+  # Размещать символ валюты позади числа (100$ вместо $100)
+  currency-symbol-placed-behind: false
+
+  # Minimum amount allowed for /pay command
+  # Минимальная сумма для перевода командой /pay
+  minimum-pay-amount: 0.01
+
 # Disabled worlds configuration / Настройка миров, в которых /tpa отключен
 # По умолчанию выключено (default: false)
 disabled-worlds:

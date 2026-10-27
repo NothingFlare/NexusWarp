@@ -6,15 +6,25 @@ import me.nexuswarp.command.ReplyCommand;
 import me.nexuswarp.command.TpAcceptCommand;
 import me.nexuswarp.command.TpCancelCommand;
 import me.nexuswarp.command.TpCommand;
+import me.nexuswarp.command.TpHereCommand;
 import me.nexuswarp.command.TpaCommand;
+import me.nexuswarp.command.eco.BalanceCommand;
+import me.nexuswarp.command.eco.BalanceTopCommand;
+import me.nexuswarp.command.eco.EcoCommand;
+import me.nexuswarp.command.eco.PayCommand;
 import me.nexuswarp.config.ConfigManager;
 import me.nexuswarp.config.LanguageManager;
+import me.nexuswarp.economy.Economy;
+import me.nexuswarp.economy.EconomyManager;
+import me.nexuswarp.economy.vault.VaultEconomyProvider;
 import me.nexuswarp.listener.PlayerEventListener;
 import me.nexuswarp.manager.MessageManager;
 import me.nexuswarp.manager.TpaManager;
+import me.nexuswarp.update.UpdateChecker;
 import me.nexuswarp.util.ServerScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class NexusWarpPlugin extends JavaPlugin {
@@ -25,6 +35,8 @@ public class NexusWarpPlugin extends JavaPlugin {
     private LanguageManager languageManager;
     private TpaManager tpaManager;
     private MessageManager messageManager;
+    private EconomyManager economyManager;
+    private VaultEconomyProvider vaultEconomyProvider;
 
     private ServerScheduler.TaskHandle tickerTask;
 
@@ -43,6 +55,14 @@ public class NexusWarpPlugin extends JavaPlugin {
         this.tpaManager = new TpaManager(this);
         this.messageManager = new MessageManager(this);
 
+        // Initialize Economy
+        this.economyManager = new EconomyManager(this);
+        this.economyManager.loadSettings();
+        Economy.setManager(this.economyManager);
+
+        // Hook into Vault if present
+        setupVault();
+
         // Register event listener
         Bukkit.getPluginManager().registerEvents(new PlayerEventListener(this), this);
 
@@ -56,56 +76,63 @@ public class NexusWarpPlugin extends JavaPlugin {
 
         // Print startup banner matching Photo 1
         printBanner(false);
+
+        // Check for updates asynchronously
+        if (getConfig().getBoolean("updates.check-for-updates", true)) {
+            new UpdateChecker(getDescription().getVersion(), getLogger(), languageManager).checkAsync();
+        }
+    }
+
+    private void setupVault() {
+        if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
+            try {
+                this.vaultEconomyProvider = new VaultEconomyProvider(this);
+                Bukkit.getServicesManager().register(
+                        net.milkbowl.vault.economy.Economy.class,
+                        vaultEconomyProvider,
+                        this,
+                        ServicePriority.Highest
+                );
+                getLogger().info("Successfully hooked into Vault as the primary Economy provider!");
+            } catch (Throwable t) {
+                getLogger().warning("Vault found, but failed to register economy provider: " + t.getMessage());
+            }
+        }
     }
 
     private void registerCommands() {
-        TpaCommand tpaCmd = new TpaCommand(this);
-        PluginCommand tpa = getCommand("tpa");
-        if (tpa != null) {
-            tpa.setExecutor(tpaCmd);
-            tpa.setTabCompleter(tpaCmd);
-        }
+        // TPA commands
+        registerCommand("tpa", new TpaCommand(this));
+        registerCommand("tpaccept", new TpAcceptCommand(this));
+        registerCommand("tpacancel", new TpCancelCommand(this));
 
-        TpAcceptCommand tpAcceptCmd = new TpAcceptCommand(this);
-        PluginCommand tpaccept = getCommand("tpaccept");
-        if (tpaccept != null) {
-            tpaccept.setExecutor(tpAcceptCmd);
-            tpaccept.setTabCompleter(tpAcceptCmd);
-        }
+        // Direct TP commands
+        registerCommand("tp", new TpCommand(this));
+        registerCommand("tphere", new TpHereCommand(this));
 
-        TpCancelCommand tpCancelCmd = new TpCancelCommand(this);
-        PluginCommand tpacancel = getCommand("tpacancel");
-        if (tpacancel != null) {
-            tpacancel.setExecutor(tpCancelCmd);
-            tpacancel.setTabCompleter(tpCancelCmd);
-        }
+        // Messaging commands
+        registerCommand("msg", new MsgCommand(this));
+        registerCommand("reply", new ReplyCommand(this));
 
-        TpCommand tpCmd = new TpCommand(this);
-        PluginCommand tp = getCommand("tp");
-        if (tp != null) {
-            tp.setExecutor(tpCmd);
-            tp.setTabCompleter(tpCmd);
-        }
+        // Economy commands
+        registerCommand("eco", new EcoCommand(this));
+        registerCommand("balance", new BalanceCommand(this));
+        registerCommand("pay", new PayCommand(this));
+        registerCommand("balancetop", new BalanceTopCommand(this));
 
-        MsgCommand msgCmd = new MsgCommand(this);
-        PluginCommand msg = getCommand("msg");
-        if (msg != null) {
-            msg.setExecutor(msgCmd);
-            msg.setTabCompleter(msgCmd);
-        }
+        // Admin command
+        registerCommand("nexuswarp", new NexusWarpCommand(this));
+    }
 
-        ReplyCommand replyCmd = new ReplyCommand(this);
-        PluginCommand reply = getCommand("reply");
-        if (reply != null) {
-            reply.setExecutor(replyCmd);
-            reply.setTabCompleter(replyCmd);
-        }
-
-        NexusWarpCommand nwCmd = new NexusWarpCommand(this);
-        PluginCommand nw = getCommand("nexuswarp");
-        if (nw != null) {
-            nw.setExecutor(nwCmd);
-            nw.setTabCompleter(nwCmd);
+    private void registerCommand(String name, Object executor) {
+        PluginCommand cmd = getCommand(name);
+        if (cmd != null) {
+            if (executor instanceof org.bukkit.command.CommandExecutor ce) {
+                cmd.setExecutor(ce);
+            }
+            if (executor instanceof org.bukkit.command.TabCompleter tc) {
+                cmd.setTabCompleter(tc);
+            }
         }
     }
 
@@ -120,6 +147,14 @@ public class NexusWarpPlugin extends JavaPlugin {
             tpaManager.clearAll();
         }
 
+        if (economyManager != null) {
+            economyManager.saveAllSync();
+        }
+
+        if (vaultEconomyProvider != null) {
+            Bukkit.getServicesManager().unregister(net.milkbowl.vault.economy.Economy.class, vaultEconomyProvider);
+        }
+
         getLogger().info("NexusWarp has been disabled!");
     }
 
@@ -127,6 +162,7 @@ public class NexusWarpPlugin extends JavaPlugin {
         ServerScheduler.runAsync(this, () -> {
             configManager.load();
             languageManager.load();
+            economyManager.loadSettings();
             printBanner(true);
             if (onComplete != null) {
                 ServerScheduler.runGlobal(this, onComplete);
@@ -178,5 +214,9 @@ public class NexusWarpPlugin extends JavaPlugin {
 
     public MessageManager getMessageManager() {
         return messageManager;
+    }
+
+    public EconomyManager getEconomyManager() {
+        return economyManager;
     }
 }

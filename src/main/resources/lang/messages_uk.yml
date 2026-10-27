@@ -51,3 +51,35 @@ teleport_success: "&aВи телепортувалися до гравця &6{pl
 teleport_success_other: "&aГравця &6{player} &aтелепортовано до &6{target}&a."
 teleport_success_coords: "&aТелепортація на координати: &6{x}&a, &6{y}&a, &6{z}&a."
 invalid_coordinates: "&cВказано невірні координати!"
+
+usage_tphere: "&cВикористання: &e/tphere <гравець>"
+tphere_success: "&aГравець &6{player} &aтелепортований до вас."
+
+usage_eco: "&cВикористання: &e/eco <give|take|set|reset> <гравець|*|**> [сума[%]]"
+eco_invalid_amount: "&cВказано невірну суму!"
+eco_max_money_error: "&cБаланс гравця перевищує максимальний ліміт!"
+eco_give_success: "&aГравцю &6{target} &aвидано &6{amount}&a."
+eco_take_success: "&aУ гравця &6{target} &aзнято &6{amount}&a."
+eco_set_success: "&aБаланс гравця &6{target} &aвстановлено на &6{amount}&a."
+eco_reset_success: "&aБаланс гравця &6{target} &aскинуто до початкового."
+
+eco_balance_self: "&aВаш баланс: &6{amount}"
+eco_balance_other: "&aБаланс гравця &6{player}&a: &6{amount}"
+
+usage_pay: "&cВикористання: &e/pay <гравець> <сума>"
+eco_pay_self: "&cНе можна переказувати кошти самому собі!"
+eco_pay_must_be_positive: "&cСума переказу має бути більшою за нуль!"
+eco_minimum_pay_amount: "&cМінімальна сума переказу: &6{amount}&c!"
+eco_insufficient_funds: "&cНедостатньо коштів для переказу!"
+eco_pay_sent: "&aВи переказали &6{amount} &aгравцю &6{player}&a."
+eco_pay_received: "&aВи отримали &6{amount} &aвід гравця &6{player}&a."
+
+eco_baltop_header: "&6==== [ &eТоп багатіїв &7(Стор. {page}/{max_pages}) &6] ==== &7Всього на сервері: &e{total}"
+eco_baltop_entry: "&e{rank}. &f{player}&7: &6{amount}"
+
+console_updates_checking: "[NexusWarp] Перевірка оновлень..."
+console_updates_fail: "[NexusWarp] Не вдалося отримати останню версію з GitHub API."
+console_updates_available: "[NexusWarp] Доступна нова версія: v{remote} (Поточна: v{current})"
+console_updates_download: "[NexusWarp] Завантажити оновлення:"
+console_updates_latest: "[NexusWarp] Ви використовуєте найновішу версію (v{version})"
+console_updates_error: "[NexusWarp] Помилка при перевірці оновлень: {error}"

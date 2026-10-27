@@ -8,6 +8,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -21,15 +22,24 @@ public class PlayerEventListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
+    public void onJoin(PlayerJoinEvent event) {
+        plugin.getEconomyManager().updatePlayerCache(event.getPlayer());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {
-        plugin.getTpaManager().handlePlayerQuit(event.getPlayer());
-        plugin.getMessageManager().removePlayer(event.getPlayer().getUniqueId());
+        Player player = event.getPlayer();
+        plugin.getTpaManager().handlePlayerQuit(player);
+        plugin.getMessageManager().removePlayer(player.getUniqueId());
+        plugin.getEconomyManager().saveUserAsync(player.getUniqueId());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onKick(PlayerKickEvent event) {
-        plugin.getTpaManager().handlePlayerQuit(event.getPlayer());
-        plugin.getMessageManager().removePlayer(event.getPlayer().getUniqueId());
+        Player player = event.getPlayer();
+        plugin.getTpaManager().handlePlayerQuit(player);
+        plugin.getMessageManager().removePlayer(player.getUniqueId());
+        plugin.getEconomyManager().saveUserAsync(player.getUniqueId());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

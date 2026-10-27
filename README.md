@@ -2,12 +2,12 @@
 
 # NexusWarp
 
-**A lightweight, high-performance teleportation (TPA) & private messaging plugin for Paper, Purpur, Spigot, and Folia.**
+**A lightweight, high-performance teleportation, economy, and messaging plugin for Paper, Purpur, Spigot, and Folia.**
 
 [![Minecraft Version](https://img.shields.io/badge/Minecraft-1.20+-2b2b2b.svg?style=flat-square)](https://papermc.io)
 [![Java Version](https://img.shields.io/badge/Java-17+-2b2b2b.svg?style=flat-square)](https://www.oracle.com/java/)
 [![Folia](https://img.shields.io/badge/Folia-Supported-2b2b2b.svg?style=flat-square)](https://papermc.io/software/folia)
-[![Release](https://img.shields.io/badge/Release-1.1-2b2b2b.svg?style=flat-square)]()
+[![Release](https://img.shields.io/badge/Release-1.2-2b2b2b.svg?style=flat-square)](https://github.com/NothingFlare/NexusWarp/releases)
 [![License](https://img.shields.io/badge/License-MIT-2b2b2b.svg?style=flat-square)](LICENSE)
 
 [Overview](#overview) • [Key Features](#key-features) • [Compatibility](#compatibility) • [Commands and Permissions](#commands-and-permissions) • [Configuration](#configuration) • [Localization](#localization) • [Installation](#installation) • [Compiling from Source](#compiling-from-source)
@@ -18,9 +18,9 @@
 
 ## Overview
 
-NexusWarp is an optimized teleportation and communication solution designed specifically for modern Minecraft server software. Standard Bukkit/Spigot teleportation implementations often suffer from synchronous chunk loading spikes and thread safety violations on multi-threaded servers. NexusWarp addresses these architectural limitations by fully supporting Folia's regional schedulers alongside Paper's asynchronous chunk loading pipelines.
+NexusWarp is an optimized, all-in-one teleportation, messaging, and economy solution designed specifically for modern Minecraft server software. Standard Bukkit/Spigot implementations often suffer from synchronous chunk loading spikes and thread safety violations on multi-threaded servers. NexusWarp addresses these architectural limitations by fully supporting Folia's regional schedulers alongside Paper's asynchronous chunk loading pipelines.
 
-The plugin provides interactive clickable chat components, direct administrative teleportation (`/tp`), private messaging (`/msg` and `/reply`), destination safety validation, granular world and dimension restrictions, and native support for 13 languages without external dependencies.
+Starting with version 1.2, NexusWarp incorporates a full Essentials-grade Economy engine with official Vault API integration, complete player and administrative teleportation mechanics (`/tpa`, `/tp`, `/tphere`), private messaging (`/msg`, `/reply`), destination safety validation, world and dimension restrictions, and an automated GitHub update checker.
 
 ---
 
@@ -28,30 +28,40 @@ The plugin provides interactive clickable chat components, direct administrative
 
 - **Native Folia and Paper Concurrency**
   - Fully compatible with Folia's multi-threaded regionized server model using `EntityScheduler`, `GlobalRegionScheduler`, and `AsyncScheduler`.
-  - Employs non-blocking asynchronous chunk loading and teleportation via `teleportAsync`.
+  - Non-blocking asynchronous chunk loading and teleportation via `teleportAsync`.
   - Flags `folia-supported: true` in the plugin manifest.
 
-- **Interactive Text Components**
-  - Incoming requests render interactive `[Accept]` and `[Cancel]` buttons directly in the chat.
-  - Hover tooltips and instant command execution prevent command injection risks and eliminate the need for console commands.
+- **Complete Essentials-Grade Economy System**
+  - High-precision arithmetic via `BigDecimal` avoiding floating-point inaccuracies.
+  - Thread-safe balance cache with asynchronous disk persistence (`plugins/NexusWarp/userdata/{uuid}.yml`).
+  - Standard Vault Economy Provider (`VaultEconomyProvider`) registered directly with Bukkit's ServicesManager for seamless compatibility with plugins like ChestShop, QuickShop, and AuctionHouse.
+  - Full player command suite: `/balance`, `/pay`, and a cached top balance leaderboard (`/balancetop`).
+  - Powerful administrative command: `/eco <give|take|set|reset> <player|*|**> [amount[%]]` supporting bulk actions and percentages.
+  - Custom exception handling: `NoLoanPermittedException`, `UserDoesNotExistException`, and `MaxMoneyException`.
 
-- **Direct Teleportation (`/tp`)**
-  - Instant teleportation to players or coordinates (`/tp <player>`, `/tp <player> <target>`, `/tp <x> <y> <z>`).
-  - Permission is disabled by default (`default: false`), designed to be granted via LuckPerms.
+- **Comprehensive Teleportation Engine**
+  - Interactive TPA requests with clickable chat buttons (`[Accept]`, `[Cancel]`) and tooltips.
+  - Direct administrative teleportation (`/tp <player>`, `/tp <player> <target>`, `/tp <x> <y> <z>`, `/tp <player> <x> <y> <z>`).
+  - Player summoning teleportation (`/tphere <player>`, aliases `/s`, `/tph`).
+  - All administrative teleportation permissions (`nexuswarp.tp`, `nexuswarp.tphere`) are disabled by default (`default: false`) for explicit management via LuckPerms.
 
 - **Private Messaging System (`/msg` & `/reply`)**
-  - Fast, thread-safe direct messaging between players and console.
-  - Quick reply functionality (`/r <message>`) tracking conversation partners.
-  - Available to all players by default (`default: true`).
+  - Thread-safe direct messaging between players and console.
+  - Quick reply functionality (`/r <message>`) tracking active conversation partners.
+  - Configurable message formatting and tab-completion.
+  - Enabled for all players by default (`default: true`).
+
+- **Automated Update Checker**
+  - Asynchronously queries GitHub API (`https://github.com/NothingFlare/NexusWarp/`) upon startup.
+  - Compares semantic versioning tags against running binary and alerts administrators in the console when new releases are available.
 
 - **Safe Landing Validation**
-  - Pre-teleport verification scans the destination environment before moving the player.
-  - Prevents teleportation into lava, the void, or inside solid suffocating blocks.
-  - Automatically checks neighboring blocks to locate a safe alternate ground position.
+  - Scans destination environments prior to teleportation.
+  - Prevents teleportation into lava, the void, or solid suffocating blocks.
+  - Scans adjacent horizontal blocks to locate a safe alternate ground position.
 
 - **World and Dimension Restrictions**
-  - Restrict teleportation by specific world names (e.g., `world_nether`, `pvp_arena`).
-  - Restrict entire dimensions by environment type (`NORMAL`, `NETHER`, `THE_END`).
+  - Restrict teleportation by specific world name or dimension type (`NORMAL`, `NETHER`, `THE_END`).
   - Includes an `ignore-bypass` directive to ensure restrictions apply to server operators during testing and production.
 
 - **Warmup and Interruption Handling**
@@ -60,7 +70,7 @@ The plugin provides interactive clickable chat components, direct administrative
   - Automatically aborts teleportation upon receiving damage during warmup.
 
 - **Comprehensive Localization**
-  - Bundled with 13 built-in language configurations. All messages and hover elements are fully customizable.
+  - Bundled with 13 built-in language files (`en`, `ru`, `zh`, `de`, `fr`, `es`, `pt`, `ja`, `uk`, `it`, `pl`, `tr`, `ko`).
 
 ---
 
@@ -77,25 +87,41 @@ The plugin provides interactive clickable chat components, direct administrative
 
 ## Commands and Permissions
 
-### Commands
+### Teleportation and Messaging Commands
 
 | Command | Aliases | Description | Default Permission |
 | :--- | :--- | :--- | :--- |
-| `/tpa <player>` | None | Sends a teleportation request to the specified player | `nexuswarp.use` |
-| `/tpaccept [player]` | `/tpyes` | Accepts an active incoming teleportation request | `nexuswarp.use` |
-| `/tpacancel [player]` | `/tpdeny`, `/tpcancel`, `/tpno` | Cancels an active request (usable by sender or recipient) | `nexuswarp.use` |
-| `/tp <player> [target]` | None | Teleports to a player or coordinates | `nexuswarp.tp` |
-| `/msg <player> <message>` | `/w`, `/tell`, `/m`, `/whisper` | Sends a private message to a player | `nexuswarp.msg` |
-| `/reply <message>` | `/r` | Replies to the last player who messaged you | `nexuswarp.msg` |
-| `/nexuswarp reload` | `/nw`, `/tpreload` | Asynchronously reloads configuration and language files | `nexuswarp.admin` |
+| `/tpa <player>` | None | Sends a teleportation request to the specified player | `nexuswarp.use` (`true`) |
+| `/tpaccept [player]` | `/tpyes` | Accepts an active incoming teleportation request | `nexuswarp.use` (`true`) |
+| `/tpacancel [player]` | `/tpdeny`, `/tpcancel`, `/tpno` | Cancels an active request (usable by sender or recipient) | `nexuswarp.use` (`true`) |
+| `/tp <player> [target]` | None | Teleports to a player, target to target, or to coordinates | `nexuswarp.tp` (`false`) |
+| `/tphere <player>` | `/s`, `/tph` | Teleports a player to your location | `nexuswarp.tphere` (`false`) |
+| `/msg <player> <message>` | `/w`, `/tell`, `/m`, `/whisper` | Sends a private message to a player | `nexuswarp.msg` (`true`) |
+| `/reply <message>` | `/r` | Replies to the last player who messaged you | `nexuswarp.msg` (`true`) |
+| `/nexuswarp reload` | `/nw`, `/tpreload` | Asynchronously reloads configuration and language files | `nexuswarp.admin` (`op`) |
 
-### Permissions
+### Economy Commands
+
+| Command | Aliases | Description | Default Permission |
+| :--- | :--- | :--- | :--- |
+| `/balance [player]` | `/bal`, `/money` | View your balance or the balance of another player | `nexuswarp.balance` (`true`) |
+| `/pay <player> <amount>` | None | Transfers money from your balance to another player | `nexuswarp.pay` (`true`) |
+| `/balancetop [page]` | `/baltop` | Displays the top balances on the server | `nexuswarp.balancetop` (`true`) |
+| `/eco <give\|take\|set\|reset> <player\|*\|**> [amount[%]]` | None | Administrative balance manipulation | `nexuswarp.eco` (`op`) |
+
+### Permissions Matrix
 
 | Node | Description | Default Assignment |
 | :--- | :--- | :--- |
 | `nexuswarp.use` | Grants access to standard player TPA commands (`/tpa`, `/tpaccept`, `/tpacancel`) | `true` (all players) |
 | `nexuswarp.msg` | Grants access to private messaging (`/msg`, `/reply`) | `true` (all players) |
-| `nexuswarp.tp` | Grants access to direct teleportation (`/tp`) — configure via LuckPerms | `false` (no one by default) |
+| `nexuswarp.tp` | Grants access to direct teleportation (`/tp`) | `false` (configure via LuckPerms) |
+| `nexuswarp.tphere` | Grants access to summoning teleportation (`/tphere`, `/s`, `/tph`) | `false` (configure via LuckPerms) |
+| `nexuswarp.balance` | Allows checking own balance via `/balance` | `true` (all players) |
+| `nexuswarp.balance.others` | Allows checking other players' balances via `/balance <player>` | `op` |
+| `nexuswarp.pay` | Allows sending payments via `/pay` | `true` (all players) |
+| `nexuswarp.balancetop` | Allows viewing top balances via `/balancetop` | `true` (all players) |
+| `nexuswarp.eco` | Allows administrative economy manipulation via `/eco` | `op` |
 | `nexuswarp.bypass.world` | Bypasses world and dimension restrictions | `false` |
 | `nexuswarp.bypass.delay` | Bypasses the teleportation warmup delay | `op` |
 | `nexuswarp.admin` | Grants access to administrative commands (`/nexuswarp reload`) | `op` |
@@ -111,20 +137,44 @@ The default configuration file (`config.yml`):
 #               NexusWarp Plugin Configuration
 # =======================================================
 
-# Active language
+# Language / Active language
 # Supported: en, ru, zh, de, fr, es, pt, ja, uk, it, pl, tr, ko
-language: "en"
+language: "ru"
 
-# World restriction settings
-# Disabled by default
+# Updates configuration
+updates:
+  # Check for updates on startup via GitHub API
+  check-for-updates: true
+
+# Economy configuration
+economy:
+  # Initial balance for newly registered players
+  starting-balance: 0.00
+
+  # Minimum allowable balance
+  min-balance: 0.00
+
+  # Maximum allowable balance
+  max-balance: 10000000000000.00
+
+  # Currency symbol displayed in messages
+  currency-symbol: "$"
+
+  # Place currency symbol behind amount (e.g. 100$ vs $100)
+  currency-symbol-placed-behind: false
+
+  # Minimum amount allowed for /pay command
+  minimum-pay-amount: 0.01
+
+# Disabled worlds configuration
 disabled-worlds:
   # Enable world restriction
   enabled: false
 
-  # Ignore bypass permissions (true = operators are subject to restrictions)
+  # Ignore bypass permission for OPs (true = OPs cannot bypass either)
   ignore-bypass: true
 
-  # World names or dimension environment types:
+  # List of world names or environment types:
   #   - "world"        (matches world name)
   #   - "world_nether" (matches world name)
   #   - "NORMAL"       (matches environment type)
@@ -137,30 +187,30 @@ disabled-worlds:
 
 # Teleportation request settings
 requests:
-  # Request expiration time in seconds (0 = disabled / request persists until resolved)
+  # Request expiration time in seconds (0 = disabled / persists until resolved)
   timeout: 0
 
-  # Warmup delay before execution in seconds (0 = instantaneous)
+  # Warmup delay before teleporting in seconds (0 = instant teleport)
   teleport-delay: 0
 
-  # Abort teleportation if the player moves during warmup
+  # Cancel teleportation if player moves during warmup
   cancel-on-movement: true
 
-  # Abort teleportation if the player takes damage during warmup
+  # Cancel teleportation if player takes damage during warmup
   cancel-on-damage: true
 
-# Safety validation prior to teleportation
+# Safety checks before teleporting
 safe-teleport:
-  # Enable destination safety scanning
+  # Enable safety checks
   enabled: true
 
-  # Block teleportation into lava
+  # Prevent teleporting into lava
   prevent-lava: true
 
-  # Block teleportation into the void
+  # Prevent teleporting into the void
   prevent-void: true
 
-  # Block teleportation into solid suffocating blocks
+  # Prevent suffocating in solid blocks
   prevent-suffocation: true
 ```
 
@@ -190,11 +240,12 @@ Pre-configured language files are located in `plugins/NexusWarp/lang/`:
 
 ## Installation
 
-1. Download `NexusWarp-1.1.jar` from the release section.
-2. Place the file into your server's `plugins/` directory.
-3. Start or reload the server to generate default files.
-4. Adjust `plugins/NexusWarp/config.yml` according to your server requirements.
-5. Execute `/nexuswarp reload` to apply configuration changes without downtime.
+1. Download `NexusWarp-1.2.jar` from the [releases page](https://github.com/NothingFlare/NexusWarp/releases).
+2. Place the jar file into your server's `plugins/` directory.
+3. If using economy features with external plugins (e.g., shops), install [Vault](https://www.spigotmc.org/resources/vault.34315/).
+4. Start or restart the server to generate default configurations and language files.
+5. Modify `plugins/NexusWarp/config.yml` according to your requirements.
+6. Execute `/nexuswarp reload` to apply configuration changes without server restart.
 
 ---
 
@@ -215,7 +266,7 @@ mvn clean package
 
 The resulting binary will be located in:
 ```text
-target/NexusWarp-1.1.jar
+target/NexusWarp-1.2.jar
 ```
 
 ---

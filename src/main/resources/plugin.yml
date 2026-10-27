@@ -3,8 +3,9 @@ version: '${project.version}'
 main: me.nexuswarp.NexusWarpPlugin
 api-version: '1.20'
 folia-supported: true
+softdepend: [Vault]
 author: NothingFlare
-description: Universal high-performance TPA & Messaging plugin for Paper, Purpur, Spigot, and Folia (1.20+)
+description: Universal high-performance TPA, Teleportation, Messaging and Economy plugin for Paper, Purpur, Spigot, and Folia (1.20+)
 
 commands:
   tpa:
@@ -24,7 +25,13 @@ commands:
   tp:
     description: Мгновенная телепортация к игроку или координатам / Teleport to a player or coordinates
     usage: /tp <player> [target] | /tp [player] <x> <y> <z>
+    aliases: [teleport]
     permission: nexuswarp.tp
+  tphere:
+    description: Телепортировать игрока к себе / Teleport a player to you
+    usage: /tphere <player>
+    aliases: [s, tph]
+    permission: nexuswarp.tphere
   msg:
     description: Отправить личное сообщение / Send a private message
     usage: /msg <player> <message>
@@ -35,6 +42,25 @@ commands:
     usage: /reply <message>
     aliases: [r]
     permission: nexuswarp.msg
+  eco:
+    description: Управление балансом игроков / Manage player economy balance
+    usage: /eco <give|take|set|reset> <player|*|**> [amount]
+    aliases: [economy]
+    permission: nexuswarp.eco
+  balance:
+    description: Посмотреть баланс / Check account balance
+    usage: /balance [player]
+    aliases: [bal, money]
+    permission: nexuswarp.balance
+  pay:
+    description: Перевести деньги другому игроку / Transfer money to another player
+    usage: /pay <player> <amount>
+    permission: nexuswarp.pay
+  balancetop:
+    description: Топ богатых игроков сервера / Top richest players leaderboard
+    usage: /balancetop [page]
+    aliases: [baltop]
+    permission: nexuswarp.balancetop
   nexuswarp:
     description: Управление плагином NexusWarp / NexusWarp management command
     usage: /nexuswarp [reload]
@@ -51,6 +77,30 @@ permissions:
   nexuswarp.tp:
     description: Доступ к прямой телепортации (выдается через LuckPerms) / Access to direct teleportation
     default: false
+  nexuswarp.tphere:
+    description: Доступ к телепортации игрока к себе (выдается через LuckPerms) / Teleport player to you
+    default: false
+  nexuswarp.tp.others:
+    description: Доступ к телепортации других игроков / Access to teleport other players
+    default: false
+  nexuswarp.tp.position:
+    description: Доступ к телепортации по координатам / Access to teleport to coordinates
+    default: false
+  nexuswarp.eco:
+    description: Доступ к управлению экономикой / Access to economy management command
+    default: op
+  nexuswarp.balance:
+    description: Доступ к просмотру своего баланса / Access to check own balance
+    default: true
+  nexuswarp.balance.others:
+    description: Доступ к просмотру баланса других игроков / Access to check other players balance
+    default: op
+  nexuswarp.pay:
+    description: Доступ к переводу денег / Access to transfer money
+    default: true
+  nexuswarp.balancetop:
+    description: Доступ к просмотру топа богачей / Access to balance top
+    default: true
   nexuswarp.bypass.world:
     description: Обход запрета телепортации в отключенных мирах / Bypass disabled worlds
     default: false

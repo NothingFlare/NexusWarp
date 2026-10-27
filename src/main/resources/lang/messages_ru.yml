@@ -50,3 +50,35 @@ teleport_success: "&aВы телепортировались к игроку &6{
 teleport_success_other: "&aИгрок &6{player} &aтелепортирован к &6{target}&a."
 teleport_success_coords: "&aТелепортация на координаты: &6{x}&a, &6{y}&a, &6{z}&a."
 invalid_coordinates: "&cУказаны неверные координаты!"
+
+usage_tphere: "&cИспользование: &e/tphere <игрок>"
+tphere_success: "&aИгрок &6{player} &aтелепортирован к вам."
+
+usage_eco: "&cИспользование: &e/eco <give|take|set|reset> <игрок|*|**> [сумма[%]]"
+eco_invalid_amount: "&cУказана неверная сумма!"
+eco_max_money_error: "&cБаланс игрока превышает максимальный лимит!"
+eco_give_success: "&aИгроку &6{target} &aвыдано &6{amount}&a."
+eco_take_success: "&aУ игрока &6{target} &aсписано &6{amount}&a."
+eco_set_success: "&aБаланс игрока &6{target} &aустановлен на &6{amount}&a."
+eco_reset_success: "&aБаланс игрока &6{target} &aсброшен до стартового."
+
+eco_balance_self: "&aВаш баланс: &6{amount}"
+eco_balance_other: "&aБаланс игрока &6{player}&a: &6{amount}"
+
+usage_pay: "&cИспользование: &e/pay <игрок> <сумма>"
+eco_pay_self: "&cНельзя переводить деньги самому себе!"
+eco_pay_must_be_positive: "&cСумма перевода должна быть больше нуля!"
+eco_minimum_pay_amount: "&cМинимальная сумма перевода: &6{amount}&c!"
+eco_insufficient_funds: "&cНедостаточно средств для перевода!"
+eco_pay_sent: "&aВы перевели &6{amount} &aигроку &6{player}&a."
+eco_pay_received: "&aВы получили &6{amount} &aот игрока &6{player}&a."
+
+eco_baltop_header: "&6==== [ &eТоп богачей &7(Стр. {page}/{max_pages}) &6] ==== &7Всего на сервере: &e{total}"
+eco_baltop_entry: "&e{rank}. &f{player}&7: &6{amount}"
+
+console_updates_checking: "[NexusWarp] Проверка обновлений..."
+console_updates_fail: "[NexusWarp] Не удалось получить последнюю версию с GitHub API."
+console_updates_available: "[NexusWarp] Доступна новая версия: v{remote} (Текущая: v{current})"
+console_updates_download: "[NexusWarp] Скачать обновление:"
+console_updates_latest: "[NexusWarp] Вы используете последнюю версию (v{version})"
+console_updates_error: "[NexusWarp] Ошибка при проверке обновлений: {error}"
