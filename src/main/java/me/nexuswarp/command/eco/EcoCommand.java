@@ -1,14 +1,19 @@
 package me.nexuswarp.command.eco;
 
 import me.nexuswarp.NexusWarpPlugin;
+import me.nexuswarp.economy.EconomyUtil;
+import me.nexuswarp.economy.MaxMoneyException;
+import me.nexuswarp.economy.NoLoanPermittedException;
+import me.nexuswarp.economy.UserAccount;
+import me.nexuswarp.economy.event.UserBalanceUpdateEvent;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 public class EcoCommand implements CommandExecutor, TabCompleter {
@@ -21,13 +26,8 @@ public class EcoCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!sender.hasPermission("nexuswarp.eco")) {
+        if (!sender.hasPermission("nexuswarp.eco") && !sender.hasPermission("essentials.eco")) {
             sender.sendMessage(plugin.getLanguageManager().getMessage("no_permission"));
-            return true;
-        }
-
-        if (!plugin.getEconomyManager().isAvailable()) {
-            sender.sendMessage(plugin.getLanguageManager().getMessage("eco_vault_not_found"));
             return true;
         }
 
@@ -36,7 +36,7 @@ public class EcoCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        String sub = args[0].toLowerCase();
+        String sub = args[0].toLowerCase(Locale.ROOT);
         String targetArg = args[1];
 
         if (sub.equals("reset")) {
@@ -51,16 +51,16 @@ public class EcoCommand implements CommandExecutor, TabCompleter {
 
         String amountStr = args[2];
         boolean isPercent = amountStr.endsWith("%");
-        double parsedAmount;
+        BigDecimal parsedAmount;
         try {
             String rawNum = isPercent ? amountStr.substring(0, amountStr.length() - 1) : amountStr;
-            parsedAmount = Double.parseDouble(rawNum);
-        } catch (NumberFormatException e) {
+            parsedAmount = EconomyUtil.parseStringToBigDecimal(rawNum);
+        } catch (IllegalArgumentException e) {
             sender.sendMessage(plugin.getLanguageManager().getMessage("eco_invalid_amount"));
             return true;
         }
 
-        if (Double.isNaN(parsedAmount) || Double.isInfinite(parsedAmount) || parsedAmount < 0) {
+        if (parsedAmount.signum() < 0) {
             sender.sendMessage(plugin.getLanguageManager().getMessage("eco_invalid_amount"));
             return true;
         }
@@ -83,59 +83,96 @@ public class EcoCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    private void handleGive(CommandSender sender, String targetArg, double amount, boolean isPercent) {
-        List<OfflinePlayer> targets = resolveTargets(targetArg);
+    private List<UUID> resolveTargetUuids(String targetArg) {
+        List<UUID> list = new ArrayList<>();
+        if (targetArg.equals("*")) {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                list.add(player.getUniqueId());
+            }
+        } else if (targetArg.equals("**")) {
+            for (UserAccount account : plugin.getEconomyManager().getAllAccounts()) {
+                list.add(account.getUuid());
+            }
+        } else {
+            UUID uuid = plugin.getEconomyManager().getUuidByName(targetArg);
+            if (uuid != null) {
+                list.add(uuid);
+            }
+        }
+        return list;
+    }
+
+    private void handleGive(CommandSender sender, String targetArg, BigDecimal amount, boolean isPercent) {
+        List<UUID> targets = resolveTargetUuids(targetArg);
         if (targets.isEmpty()) {
             sender.sendMessage(plugin.getLanguageManager().getMessage("target_not_online"));
             return;
         }
 
-        for (OfflinePlayer target : targets) {
-            double giveAmount = amount;
+        for (UUID uuid : targets) {
+            BigDecimal giveAmount = amount;
             if (isPercent) {
-                double bal = plugin.getEconomyManager().getBalance(target);
-                giveAmount = bal * (amount / 100.0);
+                BigDecimal bal = plugin.getEconomyManager().getBalance(uuid);
+                giveAmount = bal.multiply(amount).scaleByPowerOfTen(-2);
             }
-            plugin.getEconomyManager().deposit(target, giveAmount);
+
+            try {
+                plugin.getEconomyManager().deposit(uuid, giveAmount, UserBalanceUpdateEvent.Cause.COMMAND_ECO);
+            } catch (MaxMoneyException e) {
+                sender.sendMessage(plugin.getLanguageManager().getMessage("eco_max_money_error"));
+            }
         }
 
-        String formatted = plugin.getEconomyManager().format(amount);
+        String formatted = plugin.getEconomyManager().format(amount) + (isPercent ? "%" : "");
         sender.sendMessage(plugin.getLanguageManager().getMessage("eco_give_success",
                 "target", targetArg,
-                "amount", isPercent ? amount + "%" : formatted));
+                "amount", formatted));
     }
 
-    private void handleTake(CommandSender sender, String targetArg, double amount, boolean isPercent) {
-        List<OfflinePlayer> targets = resolveTargets(targetArg);
+    private void handleTake(CommandSender sender, String targetArg, BigDecimal amount, boolean isPercent) {
+        List<UUID> targets = resolveTargetUuids(targetArg);
         if (targets.isEmpty()) {
             sender.sendMessage(plugin.getLanguageManager().getMessage("target_not_online"));
             return;
         }
 
-        for (OfflinePlayer target : targets) {
-            double takeAmount = amount;
+        for (UUID uuid : targets) {
+            BigDecimal takeAmount = amount;
             if (isPercent) {
-                double bal = plugin.getEconomyManager().getBalance(target);
-                takeAmount = bal * (amount / 100.0);
+                BigDecimal bal = plugin.getEconomyManager().getBalance(uuid);
+                takeAmount = bal.multiply(amount).scaleByPowerOfTen(-2);
             }
-            plugin.getEconomyManager().withdraw(target, takeAmount);
+
+            try {
+                plugin.getEconomyManager().withdraw(uuid, takeAmount, true, UserBalanceUpdateEvent.Cause.COMMAND_ECO);
+            } catch (NoLoanPermittedException e) {
+                sender.sendMessage(plugin.getLanguageManager().getMessage("eco_min_balance_error",
+                        "amount", plugin.getEconomyManager().format(plugin.getEconomyManager().getMinBalance())));
+            } catch (MaxMoneyException ignored) {}
         }
 
-        String formatted = plugin.getEconomyManager().format(amount);
+        String formatted = plugin.getEconomyManager().format(amount) + (isPercent ? "%" : "");
         sender.sendMessage(plugin.getLanguageManager().getMessage("eco_take_success",
                 "target", targetArg,
-                "amount", isPercent ? amount + "%" : formatted));
+                "amount", formatted));
     }
 
-    private void handleSet(CommandSender sender, String targetArg, double amount) {
-        List<OfflinePlayer> targets = resolveTargets(targetArg);
+    private void handleSet(CommandSender sender, String targetArg, BigDecimal amount) {
+        List<UUID> targets = resolveTargetUuids(targetArg);
         if (targets.isEmpty()) {
             sender.sendMessage(plugin.getLanguageManager().getMessage("target_not_online"));
             return;
         }
 
-        for (OfflinePlayer target : targets) {
-            plugin.getEconomyManager().setBalance(target, amount);
+        for (UUID uuid : targets) {
+            try {
+                plugin.getEconomyManager().setBalance(uuid, amount, UserBalanceUpdateEvent.Cause.COMMAND_ECO);
+            } catch (NoLoanPermittedException e) {
+                sender.sendMessage(plugin.getLanguageManager().getMessage("eco_min_balance_error",
+                        "amount", plugin.getEconomyManager().format(plugin.getEconomyManager().getMinBalance())));
+            } catch (MaxMoneyException e) {
+                sender.sendMessage(plugin.getLanguageManager().getMessage("eco_max_money_error"));
+            }
         }
 
         String formatted = plugin.getEconomyManager().format(amount);
@@ -145,48 +182,32 @@ public class EcoCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleReset(CommandSender sender, String targetArg) {
-        List<OfflinePlayer> targets = resolveTargets(targetArg);
+        List<UUID> targets = resolveTargetUuids(targetArg);
         if (targets.isEmpty()) {
             sender.sendMessage(plugin.getLanguageManager().getMessage("target_not_online"));
             return;
         }
 
-        for (OfflinePlayer target : targets) {
-            plugin.getEconomyManager().resetBalance(target);
+        for (UUID uuid : targets) {
+            try {
+                plugin.getEconomyManager().resetBalance(uuid, UserBalanceUpdateEvent.Cause.COMMAND_ECO);
+            } catch (Exception ignored) {}
         }
 
         sender.sendMessage(plugin.getLanguageManager().getMessage("eco_reset_success",
                 "target", targetArg));
     }
 
-    private List<OfflinePlayer> resolveTargets(String arg) {
-        if (arg.equals("*") || arg.equalsIgnoreCase("**")) {
-            return new ArrayList<>(Bukkit.getOnlinePlayers());
-        }
-
-        Player online = Bukkit.getPlayer(arg);
-        if (online != null) {
-            return Collections.singletonList(online);
-        }
-
-        OfflinePlayer offline = Bukkit.getOfflinePlayer(arg);
-        if (offline.hasPlayedBefore() || offline.isOnline()) {
-            return Collections.singletonList(offline);
-        }
-
-        return Collections.emptyList();
-    }
-
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (!sender.hasPermission("nexuswarp.eco")) {
+        if (!sender.hasPermission("nexuswarp.eco") && !sender.hasPermission("essentials.eco")) {
             return Collections.emptyList();
         }
 
         if (args.length == 1) {
             List<String> subs = Arrays.asList("give", "take", "set", "reset");
-            String query = args[0].toLowerCase();
             List<String> matches = new ArrayList<>();
+            String query = args[0].toLowerCase(Locale.ROOT);
             for (String s : subs) {
                 if (s.startsWith(query)) matches.add(s);
             }
@@ -194,12 +215,12 @@ public class EcoCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 2) {
-            String query = args[1].toLowerCase();
+            String query = args[1].toLowerCase(Locale.ROOT);
             List<String> matches = new ArrayList<>();
             if ("*".startsWith(query)) matches.add("*");
             if ("**".startsWith(query)) matches.add("**");
             for (Player p : Bukkit.getOnlinePlayers()) {
-                if (p.getName().toLowerCase().startsWith(query)) {
+                if (p.getName().toLowerCase(Locale.ROOT).startsWith(query)) {
                     matches.add(p.getName());
                 }
             }
@@ -207,7 +228,7 @@ public class EcoCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 3 && !args[0].equalsIgnoreCase("reset")) {
-            return Arrays.asList("100", "500", "1000", "10%", "50%");
+            return Arrays.asList("10", "100", "1k", "10k", "50%");
         }
 
         return Collections.emptyList();

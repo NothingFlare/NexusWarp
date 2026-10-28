@@ -6,7 +6,10 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -22,34 +25,39 @@ public class BalanceTopCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!sender.hasPermission("nexuswarp.balancetop")) {
+        if (!sender.hasPermission("nexuswarp.balancetop") && !sender.hasPermission("essentials.balancetop")) {
             sender.sendMessage(plugin.getLanguageManager().getMessage("no_permission"));
             return true;
         }
 
-        if (!plugin.getEconomyManager().isAvailable()) {
-            sender.sendMessage(plugin.getLanguageManager().getMessage("eco_vault_not_found"));
-            return true;
+        int page = 1;
+        boolean force = false;
+
+        if (args.length > 0) {
+            if (args[0].equalsIgnoreCase("force")) {
+                if (!(sender instanceof Player) || sender.hasPermission("nexuswarp.balancetop.force")
+                        || sender.hasPermission("essentials.balancetop.force")) {
+                    force = true;
+                }
+            } else {
+                try {
+                    page = Integer.parseInt(args[0]);
+                    if (page < 1) page = 1;
+                } catch (NumberFormatException ignored) {}
+            }
         }
 
-        int page = 1;
-        if (args.length > 0) {
-            try {
-                page = Integer.parseInt(args[0]);
-                if (page < 1) page = 1;
-            } catch (NumberFormatException ignored) {}
+        if (force) {
+            plugin.getEconomyManager().calculateBaltop();
         }
 
         List<EconomyManager.BalanceTopEntry> baltop = plugin.getEconomyManager().getBaltop();
-        double serverTotal = plugin.getEconomyManager().getTotalServerMoney();
+        BigDecimal serverTotal = plugin.getEconomyManager().getTotalServerMoney();
 
         if (baltop.isEmpty() && plugin.getEconomyManager().getLastBaltopCalculateTime() == 0L) {
-            plugin.getEconomyManager().updateBaltopAsync();
-            baltop = plugin.getEconomyManager().getBaltopOnline();
-            serverTotal = 0.0;
-            for (EconomyManager.BalanceTopEntry e : baltop) {
-                serverTotal += e.getBalance();
-            }
+            plugin.getEconomyManager().calculateBaltop();
+            baltop = plugin.getEconomyManager().getBaltop();
+            serverTotal = plugin.getEconomyManager().getTotalServerMoney();
         }
 
         int totalAccounts = baltop.size();
@@ -75,9 +83,9 @@ public class BalanceTopCommand implements CommandExecutor, TabCompleter {
             String formattedBalance = plugin.getEconomyManager().format(entry.getBalance());
 
             sender.sendMessage(plugin.getLanguageManager().getMessage("eco_baltop_entry",
-                "rank", String.valueOf(rank),
-                "player", entry.getName(),
-                "amount", formattedBalance));
+                    "rank", String.valueOf(rank),
+                    "player", entry.getName(),
+                    "amount", formattedBalance));
         }
 
         return true;
@@ -86,7 +94,12 @@ public class BalanceTopCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            return Arrays.asList("1", "2", "3");
+            List<String> options = new ArrayList<>(Arrays.asList("1", "2", "3"));
+            if (!(sender instanceof Player) || sender.hasPermission("nexuswarp.balancetop.force")
+                    || sender.hasPermission("essentials.balancetop.force")) {
+                options.add("force");
+            }
+            return options;
         }
         return Collections.emptyList();
     }

@@ -58,17 +58,27 @@ commands:
     permission: nexuswarp.balance
   pay:
     description: Перевести деньги другому игроку / Transfer money to another player
-    usage: /pay <player> <amount>
+    usage: /pay <player|*> <amount>
     permission: nexuswarp.pay
   balancetop:
     description: Топ богатых игроков сервера / Top richest players leaderboard
-    usage: /balancetop [page]
+    usage: /balancetop [page|force]
     aliases: [baltop]
     permission: nexuswarp.balancetop
   baltop:
     description: Топ богатых игроков сервера / Top richest players leaderboard
-    usage: /baltop [page]
+    usage: /baltop [page|force]
     permission: nexuswarp.balancetop
+  paytoggle:
+    description: Переключить прием денежных переводов / Toggle receiving payments
+    usage: /paytoggle [on|off|player]
+    aliases: [payon, payoff]
+    permission: nexuswarp.paytoggle
+  payconfirmtoggle:
+    description: Переключить подтверждение переводов / Toggle payment confirmation
+    usage: /payconfirmtoggle [on|off]
+    aliases: [payconfirmon, payconfirmoff]
+    permission: nexuswarp.payconfirmtoggle
   spawn:
     description: Телепортация на спавн / Teleport to spawn location
     usage: /spawn [player]
@@ -101,10 +111,10 @@ permissions:
     description: Доступ к отправке личных сообщений / Access to private messaging
     default: true
   nexuswarp.tp:
-    description: Доступ к прямой телепортации (выдается через LuckPerms) / Access to direct teleportation
+    description: Доступ к прямой телепортации / Access to direct teleportation
     default: false
   nexuswarp.tphere:
-    description: Доступ к телепортации игрока к себе (выдается через LuckPerms) / Teleport player to you
+    description: Доступ к телепортации игрока к себе / Teleport player to you
     default: false
   nexuswarp.tp.others:
     description: Доступ к телепортации других игроков / Access to teleport other players
@@ -115,6 +125,9 @@ permissions:
   nexuswarp.eco:
     description: Доступ к управлению экономикой / Access to economy management command
     default: op
+  nexuswarp.eco.loan:
+    description: Разрешение на отрицательный баланс (кредит) / Allow negative balance loan
+    default: false
   nexuswarp.balance:
     description: Доступ к просмотру своего баланса / Access to check own balance
     default: true
@@ -124,9 +137,30 @@ permissions:
   nexuswarp.pay:
     description: Доступ к переводу денег / Access to transfer money
     default: true
+  nexuswarp.pay.multiple:
+    description: Доступ к переводу денег всем игрокам (/pay *) / Pay all players
+    default: op
+  nexuswarp.pay.offline:
+    description: Доступ к переводу денег оффлайн игрокам / Pay offline players
+    default: op
+  nexuswarp.paytoggle:
+    description: Переключение приема платежей / Toggle receiving payments
+    default: true
+  nexuswarp.paytoggle.others:
+    description: Переключение приема платежей другим игрокам / Toggle receiving payments for others
+    default: op
+  nexuswarp.payconfirmtoggle:
+    description: Переключение подтверждения переводов / Toggle payment confirmation
+    default: true
   nexuswarp.balancetop:
     description: Доступ к просмотру топа богачей / Access to balance top
     default: true
+  nexuswarp.balancetop.force:
+    description: Принудительное обновление топа богачей (/baltop force) / Force baltop recalculation
+    default: op
+  nexuswarp.balancetop.exclude:
+    description: Исключение из топа богачей / Exclude from balance top ranking
+    default: false
   nexuswarp.spawn:
     description: Доступ к команде /spawn / Access to /spawn command
     default: true

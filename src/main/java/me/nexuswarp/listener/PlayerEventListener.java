@@ -8,6 +8,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -20,11 +21,17 @@ public class PlayerEventListener implements Listener {
         this.plugin = plugin;
     }
 
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onJoin(PlayerJoinEvent event) {
+        plugin.getEconomyManager().onPlayerJoin(event.getPlayer());
+    }
+
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         plugin.getTpaManager().handlePlayerQuit(player);
         plugin.getMessageManager().removePlayer(player.getUniqueId());
+        plugin.getEconomyManager().clearPendingPayConfirm(player.getUniqueId());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -32,6 +39,7 @@ public class PlayerEventListener implements Listener {
         Player player = event.getPlayer();
         plugin.getTpaManager().handlePlayerQuit(player);
         plugin.getMessageManager().removePlayer(player.getUniqueId());
+        plugin.getEconomyManager().clearPendingPayConfirm(player.getUniqueId());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

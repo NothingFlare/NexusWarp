@@ -12,8 +12,32 @@ updates:
   # Проверять наличие обновлений на GitHub при запуске
   check-for-updates: true
 
-# Economy configuration (via Vault API) / Настройка экономики (через Vault API)
+# Economy configuration / Настройка экономики
 economy:
+  # Enable NexusWarp internal economy system
+  # Включить встроенную экономику NexusWarp
+  enabled: true
+
+  # Defines the balance new players start with
+  # Начальный баланс новых игроков
+  starting-balance: 0.00
+
+  # Minimum amount of money a player can have (e.g. 0.00 or -10000.00)
+  # Players need 'nexuswarp.eco.loan' permission to have a negative balance
+  # Минимальный баланс игрока (для отрицательного баланса нужно право 'nexuswarp.eco.loan')
+  min-balance: 0.00
+
+  # Maximum amount of money a player can have
+  # Максимальный баланс игрока
+  max-balance: 10000000000000.00
+
+  # Currency symbol / Символ валюты
+  currency-symbol: "$"
+
+  # Enable this to make the currency symbol appear at the end of the amount (e.g. 500$ vs $500)
+  # Размещать символ валюты позади суммы (например, 500$ вместо $500)
+  currency-symbol-placed-behind: false
+
   # Minimum amount allowed for /pay command
   # Минимальная сумма для перевода командой /pay
   minimum-pay-amount: 0.01
@@ -21,6 +45,22 @@ economy:
   # Balancetop cache update interval in seconds (default: 60)
   # Интервал автоматического обновления топа богачей (/baltop) в секундах (по умолчанию: 60)
   baltop-update-interval: 60
+
+  # Whether players with balance 0 or less should be shown in /baltop
+  # Показывать ли игроков с балансом 0 или меньше в /baltop
+  baltop-show-zero: true
+
+  # Minimum balance required to appear in /baltop
+  # Минимальный баланс для попадания в /baltop
+  baltop-min-balance: 0.00
+
+  # Maximum number of players cached in /baltop (-1 for unlimited)
+  # Максимальное количество игроков в топе (-1 без ограничений)
+  baltop-entry-limit: -1
+
+  # Show NPC accounts in /baltop
+  # Показывать ли NPC аккаунты в топе богачей
+  baltop-show-npcs: false
 
 # Spawn command configuration / Настройка точки спавна (/spawn)
 # By default disabled / По умолчанию выключено
@@ -97,7 +137,3 @@ safe-teleport:
   # Prevent teleporting into the void
   # Запретить телепортацию в пустоту
   prevent-void: true
-
-  # Prevent suffocating in solid blocks
-  # Запретить телепортацию внутрь блоков (удушение)
-  prevent-suffocation: true

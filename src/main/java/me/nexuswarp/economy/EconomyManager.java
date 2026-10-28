@@ -1,192 +1,288 @@
 package me.nexuswarp.economy;
 
 import me.nexuswarp.NexusWarpPlugin;
+import me.nexuswarp.economy.event.UserBalanceUpdateEvent;
 import me.nexuswarp.util.ServerScheduler;
-import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.RegisteredServiceProvider;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.MathContext;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class EconomyManager {
 
+    public static final MathContext MATH_CONTEXT = MathContext.DECIMAL128;
+
     private final NexusWarpPlugin plugin;
-    private Economy vaultEconomy;
+    private final File userdataFolder;
+
+    // In-memory thread-safe caches
+    private final Map<UUID, UserAccount> accounts = new ConcurrentHashMap<>();
+    private final Map<String, UUID> nameToUuid = new ConcurrentHashMap<>();
+    private final Map<UUID, Map<UUID, BigDecimal>> pendingPayConfirmations = new ConcurrentHashMap<>();
+
+    // Settings
+    private boolean enabled = true;
+    private BigDecimal startingBalance = BigDecimal.ZERO;
+    private BigDecimal minBalance = BigDecimal.ZERO;
+    private BigDecimal maxBalance = new BigDecimal("10000000000000");
+    private String currencySymbol = "$";
+    private boolean symbolBehind = false;
     private BigDecimal minimumPayAmount = new BigDecimal("0.01");
+
+    // Baltop settings & cache
     private int baltopInterval = 60;
+    private boolean baltopShowZero = true;
+    private BigDecimal baltopMinBalance = BigDecimal.ZERO;
+    private int baltopEntryLimit = -1;
+    private boolean baltopShowNpcs = false;
 
     private final AtomicBoolean isCalculatingBaltop = new AtomicBoolean(false);
     private volatile List<BalanceTopEntry> cachedBaltop = Collections.emptyList();
-    private volatile double cachedTotalServerMoney = 0.0;
+    private volatile BigDecimal cachedTotalServerMoney = BigDecimal.ZERO;
     private volatile long lastBaltopCalculateTime = 0L;
+
+    public static class BalanceTopEntry {
+        private final UUID uuid;
+        private final String name;
+        private final BigDecimal balance;
+
+        public BalanceTopEntry(UUID uuid, String name, BigDecimal balance) {
+            this.uuid = uuid;
+            this.name = name;
+            this.balance = balance;
+        }
+
+        public UUID getUuid() {
+            return uuid;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public BigDecimal getBalance() {
+            return balance;
+        }
+    }
 
     public EconomyManager(NexusWarpPlugin plugin) {
         this.plugin = plugin;
+        this.userdataFolder = new File(plugin.getDataFolder(), "userdata");
+        if (!userdataFolder.exists()) {
+            userdataFolder.mkdirs();
+        }
     }
 
     public void loadSettings() {
-        this.minimumPayAmount = new BigDecimal(plugin.getConfig().getString("economy.minimum-pay-amount", "0.01"));
-        this.baltopInterval = plugin.getConfig().getInt("economy.baltop-update-interval", 60);
-        if (this.baltopInterval < 5) {
-            this.baltopInterval = 5;
+        this.enabled = plugin.getConfig().getBoolean("economy.enabled", true);
+        this.startingBalance = new BigDecimal(plugin.getConfig().getString("economy.starting-balance", "0.00"));
+        
+        BigDecimal min = new BigDecimal(plugin.getConfig().getString("economy.min-balance", "0.00"));
+        if (min.signum() > 0) {
+            min = min.negate();
         }
-        hookVault();
+        this.minBalance = min;
+
+        this.maxBalance = new BigDecimal(plugin.getConfig().getString("economy.max-balance", "10000000000000.00"));
+        this.currencySymbol = plugin.getConfig().getString("economy.currency-symbol", "$");
+        this.symbolBehind = plugin.getConfig().getBoolean("economy.currency-symbol-placed-behind", false);
+        this.minimumPayAmount = new BigDecimal(plugin.getConfig().getString("economy.minimum-pay-amount", "0.01"));
+
+        this.baltopInterval = Math.max(5, plugin.getConfig().getInt("economy.baltop-update-interval", 60));
+        this.baltopShowZero = plugin.getConfig().getBoolean("economy.baltop-show-zero", true);
+        this.baltopMinBalance = new BigDecimal(plugin.getConfig().getString("economy.baltop-min-balance", "0.00"));
+        this.baltopEntryLimit = plugin.getConfig().getInt("economy.baltop-entry-limit", -1);
+        this.baltopShowNpcs = plugin.getConfig().getBoolean("economy.baltop-show-npcs", false);
+
+        loadAllDataAsync();
     }
 
-    public boolean hookVault() {
-        if (Bukkit.getPluginManager().getPlugin("Vault") == null) {
-            this.vaultEconomy = null;
-            return false;
-        }
-
-        RegisteredServiceProvider<Economy> rsp = Bukkit.getServicesManager().getRegistration(Economy.class);
-        if (rsp != null) {
-            this.vaultEconomy = rsp.getProvider();
-            return this.vaultEconomy != null;
-        }
-        this.vaultEconomy = null;
-        return false;
+    public boolean isEnabled() {
+        return enabled;
     }
 
     public boolean isAvailable() {
-        if (vaultEconomy == null) {
-            hookVault();
+        return enabled;
+    }
+
+    // -------------------------------------------------------------
+    // Data Loading & Storage
+    // -------------------------------------------------------------
+
+    public void loadAllDataAsync() {
+        ServerScheduler.runAsync(plugin, () -> {
+            File[] files = userdataFolder.listFiles((dir, name) -> name.endsWith(".yml"));
+            if (files != null) {
+                for (File file : files) {
+                    try {
+                        String fileName = file.getName();
+                        UUID uuid = UUID.fromString(fileName.substring(0, fileName.length() - 4));
+                        loadUserFile(uuid, file);
+                    } catch (Throwable ignored) {}
+                }
+            }
+            // Index all online players
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                onPlayerJoin(player);
+            }
+            // Initial Baltop calculation
+            calculateBaltop();
+        });
+    }
+
+    private UserAccount loadUserFile(UUID uuid, File file) {
+        if (!file.exists()) {
+            return null;
         }
-        return vaultEconomy != null && vaultEconomy.isEnabled();
-    }
 
-    public Economy getVault() {
-        if (vaultEconomy == null) {
-            hookVault();
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        String name = yaml.getString("last-account-name");
+        if (name == null || name.isEmpty()) {
+            OfflinePlayer op = Bukkit.getOfflinePlayer(uuid);
+            name = op.getName() != null ? op.getName() : uuid.toString().substring(0, 8);
         }
-        return vaultEconomy;
-    }
 
-    public boolean hasAccount(UUID uuid) {
-        if (!isAvailable()) return false;
-        OfflinePlayer op = Bukkit.getOfflinePlayer(uuid);
-        return getVault().hasAccount(op);
-    }
-
-    public boolean hasAccount(String name) {
-        if (!isAvailable()) return false;
-        return getVault().hasAccount(name);
-    }
-
-    public double getBalance(OfflinePlayer player) {
-        if (!isAvailable() || player == null) return 0.0;
-        return getVault().getBalance(player);
-    }
-
-    public BigDecimal getBalance(UUID uuid) {
-        if (!isAvailable()) return BigDecimal.ZERO;
-        return BigDecimal.valueOf(getBalance(Bukkit.getOfflinePlayer(uuid)));
-    }
-
-    public BigDecimal getBalance(String name) {
-        if (!isAvailable()) return BigDecimal.ZERO;
-        return BigDecimal.valueOf(getVault().getBalance(name));
-    }
-
-    public boolean has(OfflinePlayer player, double amount) {
-        if (!isAvailable() || player == null) return false;
-        return getVault().has(player, amount);
-    }
-
-    public boolean hasEnough(UUID uuid, BigDecimal amount) {
-        if (!isAvailable() || amount == null) return false;
-        return has(Bukkit.getOfflinePlayer(uuid), amount.doubleValue());
-    }
-
-    public EconomyResponse withdraw(OfflinePlayer player, double amount) {
-        if (!isAvailable() || player == null) {
-            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "Economy unavailable");
+        BigDecimal balance;
+        String rawMoney = yaml.getString("money");
+        if (rawMoney != null) {
+            try {
+                balance = new BigDecimal(rawMoney);
+            } catch (Exception e) {
+                balance = startingBalance;
+            }
+        } else {
+            balance = startingBalance;
         }
-        return getVault().withdrawPlayer(player, amount);
+
+        UserAccount account = new UserAccount(uuid, name, balance);
+        account.setNpc(yaml.getBoolean("npc", false));
+        account.setNpcName(yaml.getString("npc-name", null));
+        account.setAcceptingPay(yaml.getBoolean("accepting-pay", true));
+        account.setPromptPayConfirm(yaml.getBoolean("confirm-pay", false));
+        account.setDirty(false);
+
+        accounts.put(uuid, account);
+        if (name != null) {
+            nameToUuid.put(name.toLowerCase(Locale.ROOT), uuid);
+        }
+        return account;
     }
 
-    public void withdraw(UUID uuid, BigDecimal amount) throws NoLoanPermittedException, MaxMoneyException {
-        if (!isAvailable()) return;
-        EconomyResponse resp = withdraw(Bukkit.getOfflinePlayer(uuid), amount.doubleValue());
-        if (!resp.transactionSuccess()) {
-            throw new NoLoanPermittedException();
+    public UserAccount getAccount(UUID uuid) {
+        if (uuid == null) return null;
+        UserAccount account = accounts.get(uuid);
+        if (account != null) return account;
+
+        File file = new File(userdataFolder, uuid + ".yml");
+        if (file.exists()) {
+            return loadUserFile(uuid, file);
+        }
+        return null;
+    }
+
+    public UserAccount getOrCreateAccount(UUID uuid, String name) {
+        if (uuid == null) return null;
+        UserAccount account = getAccount(uuid);
+        if (account == null) {
+            account = createAccount(uuid, name);
+        } else if (name != null && !name.equalsIgnoreCase(account.getLastAccountName())) {
+            nameToUuid.remove(account.getLastAccountName().toLowerCase(Locale.ROOT));
+            account.setLastAccountName(name);
+            nameToUuid.put(name.toLowerCase(Locale.ROOT), uuid);
+            saveAccountAsync(account);
+        }
+        return account;
+    }
+
+    public UserAccount createAccount(UUID uuid, String name) {
+        if (uuid == null) return null;
+        String resolvedName = name != null ? name : Bukkit.getOfflinePlayer(uuid).getName();
+        if (resolvedName == null) resolvedName = uuid.toString().substring(0, 8);
+
+        UserAccount account = new UserAccount(uuid, resolvedName, startingBalance);
+        accounts.put(uuid, account);
+        nameToUuid.put(resolvedName.toLowerCase(Locale.ROOT), uuid);
+        saveAccountAsync(account);
+        return account;
+    }
+
+    public void onPlayerJoin(Player player) {
+        if (player == null) return;
+        getOrCreateAccount(player.getUniqueId(), player.getName());
+    }
+
+    public void saveAccountAsync(UserAccount account) {
+        if (account == null) return;
+        ServerScheduler.runAsync(plugin, () -> saveAccountBlocking(account));
+    }
+
+    public synchronized void saveAccountBlocking(UserAccount account) {
+        if (account == null) return;
+        File file = new File(userdataFolder, account.getUuid() + ".yml");
+        YamlConfiguration yaml = new YamlConfiguration();
+        yaml.set("last-account-name", account.getLastAccountName());
+        yaml.set("money", account.getBalance().toPlainString());
+        yaml.set("npc", account.isNpc());
+        if (account.getNpcName() != null) {
+            yaml.set("npc-name", account.getNpcName());
+        }
+        yaml.set("accepting-pay", account.isAcceptingPay());
+        yaml.set("confirm-pay", account.isPromptPayConfirm());
+
+        try {
+            yaml.save(file);
+            account.setDirty(false);
+        } catch (IOException e) {
+            plugin.getLogger().warning("[NexusWarp] Failed to save user data for " + account.getUuid() + ": " + e.getMessage());
         }
     }
 
-    public EconomyResponse deposit(OfflinePlayer player, double amount) {
-        if (!isAvailable() || player == null) {
-            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "Economy unavailable");
-        }
-        return getVault().depositPlayer(player, amount);
-    }
-
-    public void deposit(UUID uuid, BigDecimal amount) throws MaxMoneyException {
-        if (!isAvailable()) return;
-        EconomyResponse resp = deposit(Bukkit.getOfflinePlayer(uuid), amount.doubleValue());
-        if (!resp.transactionSuccess()) {
-            throw new MaxMoneyException();
+    public void saveAllBlocking() {
+        for (UserAccount account : accounts.values()) {
+            if (account.isDirty()) {
+                saveAccountBlocking(account);
+            }
         }
     }
 
-    public EconomyResponse setBalance(OfflinePlayer player, double targetBalance) {
-        if (!isAvailable() || player == null) {
-            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "Economy unavailable");
-        }
-        double current = getBalance(player);
-        if (targetBalance > current) {
-            return deposit(player, targetBalance - current);
-        } else if (targetBalance < current) {
-            return withdraw(player, current - targetBalance);
-        }
-        return new EconomyResponse(0, current, EconomyResponse.ResponseType.SUCCESS, null);
-    }
-
-    public void setBalance(UUID uuid, BigDecimal amount) throws NoLoanPermittedException, MaxMoneyException {
-        if (!isAvailable()) return;
-        setBalance(Bukkit.getOfflinePlayer(uuid), amount.doubleValue());
-    }
-
-    public EconomyResponse resetBalance(OfflinePlayer player) {
-        if (!isAvailable() || player == null) {
-            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "Economy unavailable");
-        }
-        double current = getBalance(player);
-        if (current > 0) {
-            return withdraw(player, current);
-        }
-        return new EconomyResponse(0, current, EconomyResponse.ResponseType.SUCCESS, null);
-    }
-
-    public String format(double amount) {
-        if (isAvailable()) {
-            return getVault().format(amount);
-        }
-        return String.format("%.2f", amount);
-    }
-
-    public String format(BigDecimal amount) {
-        if (amount == null) amount = BigDecimal.ZERO;
-        return format(amount.doubleValue());
-    }
-
-    public BigDecimal getMinimumPayAmount() {
-        return minimumPayAmount;
-    }
+    // -------------------------------------------------------------
+    // Name & UUID Resolution
+    // -------------------------------------------------------------
 
     public UUID getUuidByName(String name) {
-        Player online = Bukkit.getPlayer(name);
-        if (online != null) return online.getUniqueId();
+        if (name == null || name.isEmpty()) return null;
+        UUID cached = nameToUuid.get(name.toLowerCase(Locale.ROOT));
+        if (cached != null) return cached;
+
+        Player online = Bukkit.getPlayerExact(name);
+        if (online != null) {
+            onPlayerJoin(online);
+            return online.getUniqueId();
+        }
+
         OfflinePlayer op = Bukkit.getOfflinePlayer(name);
-        if (op.hasPlayedBefore() || op.isOnline()) return op.getUniqueId();
+        if (op.hasPlayedBefore() || op.isOnline()) {
+            return op.getUniqueId();
+        }
+
         return null;
     }
 
     public String getNameByUuid(UUID uuid) {
+        if (uuid == null) return "Unknown";
+        UserAccount account = accounts.get(uuid);
+        if (account != null && account.getLastAccountName() != null) {
+            return account.getLastAccountName();
+        }
         Player online = Bukkit.getPlayer(uuid);
         if (online != null) return online.getName();
         OfflinePlayer op = Bukkit.getOfflinePlayer(uuid);
@@ -194,23 +290,263 @@ public class EconomyManager {
         return uuid.toString().substring(0, 8);
     }
 
-    public static class BalanceTopEntry {
-        private final String name;
-        private final double balance;
+    public boolean hasAccount(UUID uuid) {
+        if (uuid == null) return false;
+        return accounts.containsKey(uuid) || new File(userdataFolder, uuid + ".yml").exists();
+    }
 
-        public BalanceTopEntry(String name, double balance) {
-            this.name = name;
-            this.balance = balance;
+    public boolean hasAccount(String name) {
+        if (name == null || name.isEmpty()) return false;
+        UUID uuid = getUuidByName(name);
+        return uuid != null && hasAccount(uuid);
+    }
+
+    // -------------------------------------------------------------
+    // Balance & Economy Operations
+    // -------------------------------------------------------------
+
+    public BigDecimal getBalance(UUID uuid) {
+        if (uuid == null) return startingBalance;
+        UserAccount account = getAccount(uuid);
+        return account != null ? account.getBalance() : startingBalance;
+    }
+
+    public BigDecimal getBalance(String name) {
+        UUID uuid = getUuidByName(name);
+        return uuid != null ? getBalance(uuid) : startingBalance;
+    }
+
+    public BigDecimal getBalance(OfflinePlayer player) {
+        return player != null ? getBalance(player.getUniqueId()) : startingBalance;
+    }
+
+    public boolean hasEnough(UUID uuid, BigDecimal amount) {
+        if (amount == null) return false;
+        return getBalance(uuid).compareTo(amount) >= 0;
+    }
+
+    public boolean canAfford(UUID uuid, BigDecimal cost, boolean hasLoanPerm) {
+        if (cost == null) return false;
+        BigDecimal remaining = getBalance(uuid).subtract(cost, MATH_CONTEXT);
+        if (hasLoanPerm) {
+            return remaining.compareTo(minBalance) >= 0;
+        }
+        return remaining.signum() >= 0;
+    }
+
+    public synchronized void setBalance(UUID uuid, BigDecimal newBalance, UserBalanceUpdateEvent.Cause cause)
+            throws NoLoanPermittedException, MaxMoneyException {
+        if (uuid == null) return;
+        if (newBalance == null) newBalance = BigDecimal.ZERO;
+
+        if (newBalance.compareTo(maxBalance) > 0) {
+            throw new MaxMoneyException();
+        }
+        if (newBalance.compareTo(minBalance) < 0) {
+            throw new NoLoanPermittedException();
         }
 
-        public String getName() {
-            return name;
+        OfflinePlayer op = Bukkit.getOfflinePlayer(uuid);
+        boolean hasLoan = op.isOnline() && op.getPlayer() != null &&
+                (op.getPlayer().hasPermission("nexuswarp.eco.loan") || op.getPlayer().hasPermission("essentials.eco.loan"));
+
+        if (newBalance.signum() < 0 && !hasLoan) {
+            throw new NoLoanPermittedException();
         }
 
-        public double getBalance() {
-            return balance;
+        UserAccount account = getOrCreateAccount(uuid, op.getName());
+        BigDecimal oldBalance = account.getBalance();
+
+        // Fire UserBalanceUpdateEvent
+        UserBalanceUpdateEvent event = new UserBalanceUpdateEvent(op, oldBalance, newBalance, cause);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return;
+        }
+
+        BigDecimal finalBalance = event.getNewBalance();
+        if (finalBalance.compareTo(maxBalance) > 0) {
+            throw new MaxMoneyException();
+        }
+        if (finalBalance.compareTo(minBalance) < 0) {
+            throw new NoLoanPermittedException();
+        }
+
+        account.setBalance(finalBalance);
+        saveAccountAsync(account);
+    }
+
+    public synchronized void deposit(UUID uuid, BigDecimal amount, UserBalanceUpdateEvent.Cause cause)
+            throws MaxMoneyException {
+        if (uuid == null || amount == null) return;
+        if (amount.signum() < 0) {
+            try {
+                withdraw(uuid, amount.abs(), false, cause);
+            } catch (NoLoanPermittedException e) {
+                plugin.getLogger().warning("[NexusWarp] Loan not permitted for negative deposit: " + e.getMessage());
+            }
+            return;
+        }
+
+        BigDecimal current = getBalance(uuid);
+        BigDecimal target = current.add(amount, MATH_CONTEXT);
+        try {
+            setBalance(uuid, target, cause);
+        } catch (NoLoanPermittedException ignored) {}
+    }
+
+    public synchronized void withdraw(UUID uuid, BigDecimal amount, boolean checkLoanPerm, UserBalanceUpdateEvent.Cause cause)
+            throws NoLoanPermittedException, MaxMoneyException {
+        if (uuid == null || amount == null) return;
+        if (amount.signum() < 0) {
+            deposit(uuid, amount.abs(), cause);
+            return;
+        }
+
+        OfflinePlayer op = Bukkit.getOfflinePlayer(uuid);
+        boolean hasLoan = !checkLoanPerm || (op.isOnline() && op.getPlayer() != null &&
+                (op.getPlayer().hasPermission("nexuswarp.eco.loan") || op.getPlayer().hasPermission("essentials.eco.loan")));
+
+        if (!canAfford(uuid, amount, hasLoan)) {
+            throw new NoLoanPermittedException();
+        }
+
+        BigDecimal current = getBalance(uuid);
+        BigDecimal target = current.subtract(amount, MATH_CONTEXT);
+        setBalance(uuid, target, cause);
+    }
+
+    public synchronized void multiply(UUID uuid, BigDecimal amount, UserBalanceUpdateEvent.Cause cause)
+            throws NoLoanPermittedException, MaxMoneyException {
+        if (uuid == null || amount == null) return;
+        BigDecimal current = getBalance(uuid);
+        BigDecimal target = current.multiply(amount, MATH_CONTEXT);
+        setBalance(uuid, target, cause);
+    }
+
+    public synchronized void divide(UUID uuid, BigDecimal amount, UserBalanceUpdateEvent.Cause cause)
+            throws NoLoanPermittedException, MaxMoneyException {
+        if (uuid == null || amount == null) return;
+        if (amount.signum() == 0) {
+            throw new ArithmeticException("Division by zero");
+        }
+        BigDecimal current = getBalance(uuid);
+        BigDecimal target = current.divide(amount, MATH_CONTEXT);
+        setBalance(uuid, target, cause);
+    }
+
+    public synchronized void resetBalance(UUID uuid, UserBalanceUpdateEvent.Cause cause)
+            throws NoLoanPermittedException, MaxMoneyException {
+        if (uuid == null) return;
+        setBalance(uuid, startingBalance, cause);
+    }
+
+    // -------------------------------------------------------------
+    // NPC Accounts
+    // -------------------------------------------------------------
+
+    public boolean isNPC(UUID uuid) {
+        UserAccount account = getAccount(uuid);
+        return account != null && account.isNpc();
+    }
+
+    public boolean isNPC(String name) {
+        UUID uuid = getUuidByName(name);
+        return uuid != null && isNPC(uuid);
+    }
+
+    public synchronized boolean createNPC(String name) {
+        if (name == null || name.isEmpty() || hasAccount(name)) {
+            return false;
+        }
+
+        UUID npcUUID = UUID.nameUUIDFromBytes(("NPC:" + name).getBytes(StandardCharsets.UTF_8));
+        UserAccount account = new UserAccount(npcUUID, name, startingBalance);
+        account.setNpc(true);
+        account.setNpcName(name);
+
+        accounts.put(npcUUID, account);
+        nameToUuid.put(name.toLowerCase(Locale.ROOT), npcUUID);
+        saveAccountBlocking(account);
+        return true;
+    }
+
+    public synchronized void removeNPC(String name) throws UserDoesNotExistException {
+        if (name == null || name.isEmpty()) {
+            throw new UserDoesNotExistException(name);
+        }
+
+        UUID uuid = getUuidByName(name);
+        if (uuid == null) {
+            uuid = UUID.nameUUIDFromBytes(("NPC:" + name).getBytes(StandardCharsets.UTF_8));
+        }
+
+        UserAccount account = getAccount(uuid);
+        if (account == null || !account.isNpc()) {
+            throw new UserDoesNotExistException(name);
+        }
+
+        accounts.remove(uuid);
+        nameToUuid.remove(name.toLowerCase(Locale.ROOT));
+        File file = new File(userdataFolder, uuid + ".yml");
+        if (file.exists()) {
+            file.delete();
         }
     }
+
+    // -------------------------------------------------------------
+    // Pay Toggle & Confirmation
+    // -------------------------------------------------------------
+
+    public boolean isAcceptingPay(UUID uuid) {
+        UserAccount account = getAccount(uuid);
+        return account == null || account.isAcceptingPay();
+    }
+
+    public void setAcceptingPay(UUID uuid, boolean accepting) {
+        UserAccount account = getOrCreateAccount(uuid, null);
+        if (account != null) {
+            account.setAcceptingPay(accepting);
+            saveAccountAsync(account);
+        }
+    }
+
+    public boolean isPromptingPayConfirm(UUID uuid) {
+        UserAccount account = getAccount(uuid);
+        return account != null && account.isPromptPayConfirm();
+    }
+
+    public void setPromptingPayConfirm(UUID uuid, boolean prompt) {
+        UserAccount account = getOrCreateAccount(uuid, null);
+        if (account != null) {
+            account.setPromptPayConfirm(prompt);
+            saveAccountAsync(account);
+        }
+    }
+
+    public BigDecimal getPendingPayConfirm(UUID sender, UUID target) {
+        Map<UUID, BigDecimal> map = pendingPayConfirmations.get(sender);
+        return map != null ? map.get(target) : null;
+    }
+
+    public void setPendingPayConfirm(UUID sender, UUID target, BigDecimal amount) {
+        pendingPayConfirmations.computeIfAbsent(sender, k -> new ConcurrentHashMap<>()).put(target, amount);
+    }
+
+    public void clearPendingPayConfirm(UUID sender) {
+        pendingPayConfirmations.remove(sender);
+    }
+
+    public void removePendingPayConfirm(UUID sender, UUID target) {
+        Map<UUID, BigDecimal> map = pendingPayConfirmations.get(sender);
+        if (map != null) {
+            map.remove(target);
+        }
+    }
+
+    // -------------------------------------------------------------
+    // Baltop Cache & Calculation
+    // -------------------------------------------------------------
 
     public int getBaltopInterval() {
         return baltopInterval;
@@ -220,7 +556,7 @@ public class EconomyManager {
         return cachedBaltop;
     }
 
-    public double getTotalServerMoney() {
+    public BigDecimal getTotalServerMoney() {
         return cachedTotalServerMoney;
     }
 
@@ -233,9 +569,6 @@ public class EconomyManager {
     }
 
     public void updateBaltopAsync() {
-        if (!isAvailable()) {
-            return;
-        }
         if (!isCalculatingBaltop.compareAndSet(false, true)) {
             return;
         }
@@ -251,54 +584,41 @@ public class EconomyManager {
         });
     }
 
-    private void calculateBaltop() {
-        if (!isAvailable()) {
-            return;
-        }
+    public void calculateBaltop() {
+        List<BalanceTopEntry> list = new ArrayList<>();
+        BigDecimal total = BigDecimal.ZERO;
 
-        Map<UUID, BalanceTopEntry> map = new HashMap<>();
-        double total = 0.0;
-
-        OfflinePlayer[] offlinePlayers = Bukkit.getOfflinePlayers();
-        if (offlinePlayers != null) {
-            for (OfflinePlayer op : offlinePlayers) {
-                if (op == null) continue;
-                UUID uuid = op.getUniqueId();
-                String name = op.getName();
-                if (name == null || name.isEmpty()) continue;
-
-                try {
-                    double bal = getBalance(op);
-                    if (bal > 0.0) {
-                        map.put(uuid, new BalanceTopEntry(name, bal));
-                        total += bal;
-                    }
-                } catch (Throwable ignored) {}
+        for (UserAccount account : accounts.values()) {
+            if (account == null) continue;
+            if (!baltopShowNpcs && account.isNpc()) {
+                continue;
             }
+
+            // Exclude permission check if online
+            Player player = Bukkit.getPlayer(account.getUuid());
+            if (player != null && (player.hasPermission("nexuswarp.balancetop.exclude") ||
+                    player.hasPermission("essentials.balancetop.exclude"))) {
+                continue;
+            }
+
+            BigDecimal bal = account.getBalance();
+            total = total.add(bal, MATH_CONTEXT);
+
+            if (!baltopShowZero && bal.signum() <= 0) {
+                continue;
+            }
+            if (bal.compareTo(baltopMinBalance) < 0) {
+                continue;
+            }
+
+            list.add(new BalanceTopEntry(account.getUuid(), account.getLastAccountName(), bal));
         }
 
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            if (p == null) continue;
-            UUID uuid = p.getUniqueId();
-            String name = p.getName();
+        list.sort((a, b) -> b.getBalance().compareTo(a.getBalance()));
 
-            try {
-                double bal = getBalance(p);
-                BalanceTopEntry existing = map.get(uuid);
-                if (existing != null) {
-                    total -= existing.getBalance();
-                }
-                if (bal > 0.0) {
-                    map.put(uuid, new BalanceTopEntry(name, bal));
-                    total += bal;
-                } else {
-                    map.remove(uuid);
-                }
-            } catch (Throwable ignored) {}
+        if (baltopEntryLimit > 0 && list.size() > baltopEntryLimit) {
+            list = list.subList(0, baltopEntryLimit);
         }
-
-        List<BalanceTopEntry> list = new ArrayList<>(map.values());
-        list.sort((a, b) -> Double.compare(b.getBalance(), a.getBalance()));
 
         this.cachedBaltop = Collections.unmodifiableList(list);
         this.cachedTotalServerMoney = total;
@@ -307,12 +627,53 @@ public class EconomyManager {
 
     public List<BalanceTopEntry> getBaltopOnline() {
         List<BalanceTopEntry> list = new ArrayList<>();
-        if (!isAvailable()) return list;
-
         for (Player p : Bukkit.getOnlinePlayers()) {
-            list.add(new BalanceTopEntry(p.getName(), getBalance(p)));
+            if (p.hasPermission("nexuswarp.balancetop.exclude") || p.hasPermission("essentials.balancetop.exclude")) {
+                continue;
+            }
+            list.add(new BalanceTopEntry(p.getUniqueId(), p.getName(), getBalance(p.getUniqueId())));
         }
-        list.sort(Comparator.comparingDouble(BalanceTopEntry::getBalance).reversed());
+        list.sort((a, b) -> b.getBalance().compareTo(a.getBalance()));
         return list;
+    }
+
+    // -------------------------------------------------------------
+    // Currency Formatting
+    // -------------------------------------------------------------
+
+    public String format(BigDecimal amount) {
+        return EconomyUtil.formatCurrency(amount, currencySymbol, symbolBehind);
+    }
+
+    public String format(double amount) {
+        return format(BigDecimal.valueOf(amount));
+    }
+
+    public String getCurrencySymbol() {
+        return currencySymbol;
+    }
+
+    public boolean isSymbolBehind() {
+        return symbolBehind;
+    }
+
+    public BigDecimal getStartingBalance() {
+        return startingBalance;
+    }
+
+    public BigDecimal getMinBalance() {
+        return minBalance;
+    }
+
+    public BigDecimal getMaxBalance() {
+        return maxBalance;
+    }
+
+    public BigDecimal getMinimumPayAmount() {
+        return minimumPayAmount;
+    }
+
+    public Collection<UserAccount> getAllAccounts() {
+        return Collections.unmodifiableCollection(accounts.values());
     }
 }

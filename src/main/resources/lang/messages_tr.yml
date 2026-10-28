@@ -96,3 +96,14 @@ setspawn_success: "&aBaşlangıç noktası mevcut koordinatlarınıza ayarlandı
 sethub_success: "&aLobi noktası mevcut koordinatlarınıza ayarlandı!"
 
 eco_vault_not_found: "&cEkonomi sistemi kullanılamıyor: Vault veya bir ekonomi eklentisi bulunamadı!"
+
+eco_min_balance_error: "&cPlayer balance cannot be less than minimum balance (&6{amount}&c)!"
+eco_not_accepting_pay: "&cPlayer &6{player} &cis not accepting payments!"
+eco_pay_toggle_on: "&aYou are now accepting payments."
+eco_pay_toggle_off: "&cYou are no longer accepting payments."
+eco_pay_confirm_prompt: "&eTo confirm payment of &6{amount}&e, please type: &b{command}"
+eco_pay_confirm_toggle_on: "&aPayment confirmation has been enabled."
+eco_pay_confirm_toggle_off: "&cPayment confirmation has been disabled."
+eco_pay_offline_not_allowed: "&cYou do not have permission to pay offline players!"
+usage_paytoggle: "&cUsage: &e/paytoggle [on|off|player]"
+usage_payconfirmtoggle: "&cUsage: &e/payconfirmtoggle [on|off]"

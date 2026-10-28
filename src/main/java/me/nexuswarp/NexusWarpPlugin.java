@@ -16,10 +16,13 @@ import me.nexuswarp.command.eco.BalanceCommand;
 import me.nexuswarp.command.eco.BalanceTopCommand;
 import me.nexuswarp.command.eco.EcoCommand;
 import me.nexuswarp.command.eco.PayCommand;
+import me.nexuswarp.command.eco.PayConfirmToggleCommand;
+import me.nexuswarp.command.eco.PayToggleCommand;
 import me.nexuswarp.config.ConfigManager;
 import me.nexuswarp.config.LanguageManager;
 import me.nexuswarp.economy.Economy;
 import me.nexuswarp.economy.EconomyManager;
+import me.nexuswarp.economy.vault.VaultEconomyProvider;
 import me.nexuswarp.listener.PlayerEventListener;
 import me.nexuswarp.manager.MessageManager;
 import me.nexuswarp.manager.TpaManager;
@@ -27,6 +30,7 @@ import me.nexuswarp.update.UpdateChecker;
 import me.nexuswarp.util.ServerScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class NexusWarpPlugin extends JavaPlugin {
@@ -38,6 +42,7 @@ public class NexusWarpPlugin extends JavaPlugin {
     private TpaManager tpaManager;
     private MessageManager messageManager;
     private EconomyManager economyManager;
+    private VaultEconomyProvider vaultProvider;
 
     private ServerScheduler.TaskHandle tickerTask;
     private ServerScheduler.TaskHandle baltopTask;
@@ -57,12 +62,12 @@ public class NexusWarpPlugin extends JavaPlugin {
         this.tpaManager = new TpaManager(this);
         this.messageManager = new MessageManager(this);
 
-        // Initialize Economy via Vault
+        // Initialize Standalone Economy (matching Essentials logic)
         this.economyManager = new EconomyManager(this);
         this.economyManager.loadSettings();
         Economy.setManager(this.economyManager);
 
-        // Hook into Vault
+        // Register Vault Economy Provider
         setupVault();
 
         // Register event listener
@@ -79,7 +84,7 @@ public class NexusWarpPlugin extends JavaPlugin {
         // Start asynchronous periodic baltop cache update task (every 60s by default)
         startBaltopTask();
 
-        // Print startup banner matching Photo 1
+        // Print startup banner
         printBanner(false);
 
         // Check for updates asynchronously
@@ -101,12 +106,12 @@ public class NexusWarpPlugin extends JavaPlugin {
     }
 
     private void setupVault() {
-        if (economyManager.hookVault()) {
-            getLogger().info("Successfully hooked into Vault Economy API (" + economyManager.getVault().getName() + ")!");
-        } else if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
-            getLogger().info("Vault found, but no Economy provider registered yet (will hook dynamically when available).");
+        if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
+            this.vaultProvider = new VaultEconomyProvider(this);
+            Bukkit.getServicesManager().register(net.milkbowl.vault.economy.Economy.class, this.vaultProvider, this, ServicePriority.Normal);
+            getLogger().info("Successfully registered NexusWarp as Vault Economy provider!");
         } else {
-            getLogger().info("Vault not found. Economy features will be disabled.");
+            getLogger().info("Vault not found. Running NexusWarp standalone economy without Vault bridge.");
         }
     }
 
@@ -124,7 +129,7 @@ public class NexusWarpPlugin extends JavaPlugin {
         registerCommand("msg", new MsgCommand(this));
         registerCommand("reply", new ReplyCommand(this));
 
-        // Economy commands (via Vault)
+        // Economy commands
         registerCommand("eco", new EcoCommand(this));
         BalanceCommand balanceCommand = new BalanceCommand(this);
         registerCommand("balance", balanceCommand);
@@ -133,6 +138,12 @@ public class NexusWarpPlugin extends JavaPlugin {
         BalanceTopCommand baltopCommand = new BalanceTopCommand(this);
         registerCommand("balancetop", baltopCommand);
         registerCommand("baltop", baltopCommand);
+
+        PayToggleCommand payToggleCommand = new PayToggleCommand(this);
+        registerCommand("paytoggle", payToggleCommand);
+
+        PayConfirmToggleCommand payConfirmToggleCommand = new PayConfirmToggleCommand(this);
+        registerCommand("payconfirmtoggle", payConfirmToggleCommand);
 
         // Spawn & Hub commands
         registerCommand("spawn", new SpawnCommand(this));
@@ -166,6 +177,15 @@ public class NexusWarpPlugin extends JavaPlugin {
         if (baltopTask != null) {
             baltopTask.cancel();
             baltopTask = null;
+        }
+
+        if (vaultProvider != null) {
+            Bukkit.getServicesManager().unregister(net.milkbowl.vault.economy.Economy.class, vaultProvider);
+            vaultProvider = null;
+        }
+
+        if (economyManager != null) {
+            economyManager.saveAllBlocking();
         }
 
         if (tpaManager != null) {
