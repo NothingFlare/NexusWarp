@@ -94,3 +94,5 @@ spawn_teleport_other: "&6{player} &aadlı oyuncu başlangıç noktasına ışın
 hub_teleport_other: "&6{player} &aadlı oyuncu lobiye ışınlandı."
 setspawn_success: "&aBaşlangıç noktası mevcut koordinatlarınıza ayarlandı!"
 sethub_success: "&aLobi noktası mevcut koordinatlarınıza ayarlandı!"
+
+eco_vault_not_found: "&cEkonomi sistemi kullanılamıyor: Vault veya bir ekonomi eklentisi bulunamadı!"

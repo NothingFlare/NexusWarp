@@ -20,7 +20,7 @@
 
 NexusWarp is an optimized, all-in-one teleportation, messaging, and economy solution designed specifically for modern Minecraft server software. Standard Bukkit/Spigot implementations often suffer from synchronous chunk loading spikes and thread safety violations on multi-threaded servers. NexusWarp addresses these architectural limitations by fully supporting Folia's regional schedulers alongside Paper's asynchronous chunk loading pipelines.
 
-Starting with version 1.2, NexusWarp incorporates a full Essentials-grade Economy engine with official Vault API integration, complete player and administrative teleportation mechanics (`/tpa`, `/tp`, `/tphere`), private messaging (`/msg`, `/reply`), destination safety validation, world and dimension restrictions, and an automated GitHub update checker.
+Starting with version 1.2, NexusWarp incorporates native Vault Economy API integration, complete player and administrative teleportation mechanics (`/tpa`, `/tp`, `/tphere`), spawn and hub management (`/spawn`, `/hub`), private messaging (`/msg`, `/reply`), destination safety validation, world and dimension restrictions, and an automated GitHub update checker.
 
 ---
 
@@ -31,13 +31,12 @@ Starting with version 1.2, NexusWarp incorporates a full Essentials-grade Econom
   - Non-blocking asynchronous chunk loading and teleportation via `teleportAsync`.
   - Flags `folia-supported: true` in the plugin manifest.
 
-- **Complete Essentials-Grade Economy System**
-  - High-precision arithmetic via `BigDecimal` avoiding floating-point inaccuracies.
-  - Thread-safe balance cache with asynchronous disk persistence (`plugins/NexusWarp/userdata/{uuid}.yml`).
-  - Standard Vault Economy Provider (`VaultEconomyProvider`) registered directly with Bukkit's ServicesManager for seamless compatibility with plugins like ChestShop, QuickShop, and AuctionHouse.
-  - Full player command suite: `/balance`, `/pay`, and a cached top balance leaderboard (`/balancetop`).
-  - Powerful administrative command: `/eco <give|take|set|reset> <player|*|**> [amount[%]]` supporting bulk actions and percentages.
-  - Custom exception handling: `NoLoanPermittedException`, `UserDoesNotExistException`, and `MaxMoneyException`.
+- **Vault Economy API Integration**
+  - Uses the official `net.milkbowl.vault.economy.Economy` API, interfacing directly with your server's primary economy plugin (EssentialsX, CMI, etc.).
+  - No duplicate databases or redundant storage; all balances and transactions flow seamlessly through Vault.
+  - Complete player command suite: `/balance` (aliases: `/bal`, `/money`), `/pay <player> <amount>`, and `/balancetop` (alias: `/baltop`).
+  - Administrative economy control: `/eco <give|take|set|reset> <player|*|**> [amount[%]]` (alias: `/economy`).
+  - Configurable minimum transfer threshold (`economy.minimum-pay-amount`).
 
 - **Comprehensive Teleportation Engine**
   - Interactive TPA requests with clickable chat buttons (`[Accept]`, `[Cancel]`) and tooltips.
@@ -113,7 +112,7 @@ Starting with version 1.2, NexusWarp incorporates a full Essentials-grade Econom
 | `/balance [player]` | `/bal`, `/money` | View your balance or the balance of another player | `nexuswarp.balance` (`true`) |
 | `/pay <player> <amount>` | None | Transfers money from your balance to another player | `nexuswarp.pay` (`true`) |
 | `/balancetop [page]` | `/baltop` | Displays the top balances on the server | `nexuswarp.balancetop` (`true`) |
-| `/eco <give\|take\|set\|reset> <player\|*\|**> [amount[%]]` | None | Administrative balance manipulation | `nexuswarp.eco` (`op`) |
+| `/eco <give\|take\|set\|reset> <player\|*\|**> [amount[%]]` | `/economy` | Administrative balance manipulation | `nexuswarp.eco` (`op`) |
 
 ### Permissions Matrix
 
@@ -158,23 +157,8 @@ updates:
   # Check for updates on startup via GitHub API
   check-for-updates: true
 
-# Economy configuration
+# Economy configuration (via Vault API)
 economy:
-  # Initial balance for newly registered players
-  starting-balance: 0.00
-
-  # Minimum allowable balance
-  min-balance: 0.00
-
-  # Maximum allowable balance
-  max-balance: 10000000000000.00
-
-  # Currency symbol displayed in messages
-  currency-symbol: "$"
-
-  # Place currency symbol behind amount (e.g. 500$, 500руб vs $500, руб500)
-  currency-symbol-placed-behind: true
-
   # Minimum amount allowed for /pay command
   minimum-pay-amount: 0.01
 
@@ -276,7 +260,7 @@ Pre-configured language files are located in `plugins/NexusWarp/lang/`:
 
 1. Download `NexusWarp-1.2.jar` from the [releases page](https://github.com/NothingFlare/NexusWarp/releases).
 2. Place the jar file into your server's `plugins/` directory.
-3. If using economy features with external plugins (e.g., shops), install [Vault](https://www.spigotmc.org/resources/vault.34315/).
+3. If using economy features, install [Vault](https://www.spigotmc.org/resources/vault.34315/) alongside any Vault-compatible economy provider (e.g., EssentialsX).
 4. Start or restart the server to generate default configurations and language files.
 5. Modify `plugins/NexusWarp/config.yml` according to your requirements.
 6. Execute `/nexuswarp reload` to apply configuration changes without server restart.

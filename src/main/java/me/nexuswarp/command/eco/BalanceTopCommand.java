@@ -7,7 +7,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 
-import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +27,11 @@ public class BalanceTopCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        if (!plugin.getEconomyManager().isAvailable()) {
+            sender.sendMessage(plugin.getLanguageManager().getMessage("eco_vault_not_found"));
+            return true;
+        }
+
         int page = 1;
         if (args.length > 0) {
             try {
@@ -36,7 +40,7 @@ public class BalanceTopCommand implements CommandExecutor, TabCompleter {
             } catch (NumberFormatException ignored) {}
         }
 
-        List<EconomyManager.BalanceTopEntry> baltop = plugin.getEconomyManager().getBaltop();
+        List<EconomyManager.BalanceTopEntry> baltop = plugin.getEconomyManager().getBaltopOnline();
         int totalAccounts = baltop.size();
         int maxPages = Math.max(1, (int) Math.ceil((double) totalAccounts / PAGE_SIZE));
 
@@ -44,7 +48,10 @@ public class BalanceTopCommand implements CommandExecutor, TabCompleter {
             page = maxPages;
         }
 
-        BigDecimal serverTotal = plugin.getEconomyManager().getTotalServerMoney();
+        double serverTotal = 0;
+        for (EconomyManager.BalanceTopEntry e : baltop) {
+            serverTotal += e.getBalance();
+        }
         String formattedTotal = plugin.getEconomyManager().format(serverTotal);
 
         sender.sendMessage(plugin.getLanguageManager().getMessage("eco_baltop_header",
@@ -61,9 +68,9 @@ public class BalanceTopCommand implements CommandExecutor, TabCompleter {
             String formattedBalance = plugin.getEconomyManager().format(entry.getBalance());
 
             sender.sendMessage(plugin.getLanguageManager().getMessage("eco_baltop_entry",
-                    "rank", String.valueOf(rank),
-                    "player", entry.getName(),
-                    "amount", formattedBalance));
+                "rank", String.valueOf(rank),
+                "player", entry.getName(),
+                "amount", formattedBalance));
         }
 
         return true;

@@ -94,3 +94,5 @@ spawn_teleport_other: "&a玩家 &6{player} &a已被传送至出生点。"
 hub_teleport_other: "&a玩家 &6{player} &a已被传送至主城。"
 setspawn_success: "&a出生点已成功设置为您的当前坐标！"
 sethub_success: "&a主城点已成功设置为您的当前坐标！"
+
+eco_vault_not_found: "&c经济系统不可用：未找到 Vault 或经济插件！"

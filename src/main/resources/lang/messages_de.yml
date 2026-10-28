@@ -94,3 +94,5 @@ spawn_teleport_other: "&aSpieler &6{player} &awurde zum Spawn teleportiert."
 hub_teleport_other: "&aSpieler &6{player} &awurde zum Hub teleportiert."
 setspawn_success: "&aSpawn-Punkt erfolgreich auf deine aktuellen Koordinaten gesetzt!"
 sethub_success: "&aHub-Punkt erfolgreich auf deine aktuellen Koordinaten gesetzt!"
+
+eco_vault_not_found: "&cWirtschaftssystem nicht verfügbar: Vault oder Wirtschaftsplugin nicht gefunden!"

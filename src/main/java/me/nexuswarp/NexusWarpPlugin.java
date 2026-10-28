@@ -20,7 +20,6 @@ import me.nexuswarp.config.ConfigManager;
 import me.nexuswarp.config.LanguageManager;
 import me.nexuswarp.economy.Economy;
 import me.nexuswarp.economy.EconomyManager;
-import me.nexuswarp.economy.vault.VaultEconomyProvider;
 import me.nexuswarp.listener.PlayerEventListener;
 import me.nexuswarp.manager.MessageManager;
 import me.nexuswarp.manager.TpaManager;
@@ -28,7 +27,6 @@ import me.nexuswarp.update.UpdateChecker;
 import me.nexuswarp.util.ServerScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
-import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class NexusWarpPlugin extends JavaPlugin {
@@ -40,7 +38,6 @@ public class NexusWarpPlugin extends JavaPlugin {
     private TpaManager tpaManager;
     private MessageManager messageManager;
     private EconomyManager economyManager;
-    private VaultEconomyProvider vaultEconomyProvider;
 
     private ServerScheduler.TaskHandle tickerTask;
 
@@ -59,12 +56,12 @@ public class NexusWarpPlugin extends JavaPlugin {
         this.tpaManager = new TpaManager(this);
         this.messageManager = new MessageManager(this);
 
-        // Initialize Economy
+        // Initialize Economy via Vault
         this.economyManager = new EconomyManager(this);
         this.economyManager.loadSettings();
         Economy.setManager(this.economyManager);
 
-        // Hook into Vault if present
+        // Hook into Vault
         setupVault();
 
         // Register event listener
@@ -88,19 +85,12 @@ public class NexusWarpPlugin extends JavaPlugin {
     }
 
     private void setupVault() {
-        if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
-            try {
-                this.vaultEconomyProvider = new VaultEconomyProvider(this);
-                Bukkit.getServicesManager().register(
-                        net.milkbowl.vault.economy.Economy.class,
-                        vaultEconomyProvider,
-                        this,
-                        ServicePriority.Highest
-                );
-                getLogger().info("Successfully hooked into Vault as the primary Economy provider!");
-            } catch (Throwable t) {
-                getLogger().warning("Vault found, but failed to register economy provider: " + t.getMessage());
-            }
+        if (economyManager.hookVault()) {
+            getLogger().info("Successfully hooked into Vault Economy API (" + economyManager.getVault().getName() + ")!");
+        } else if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
+            getLogger().info("Vault found, but no Economy provider registered yet (will hook dynamically when available).");
+        } else {
+            getLogger().info("Vault not found. Economy features will be disabled.");
         }
     }
 
@@ -118,7 +108,7 @@ public class NexusWarpPlugin extends JavaPlugin {
         registerCommand("msg", new MsgCommand(this));
         registerCommand("reply", new ReplyCommand(this));
 
-        // Economy commands
+        // Economy commands (via Vault)
         registerCommand("eco", new EcoCommand(this));
         registerCommand("balance", new BalanceCommand(this));
         registerCommand("pay", new PayCommand(this));
@@ -155,14 +145,6 @@ public class NexusWarpPlugin extends JavaPlugin {
 
         if (tpaManager != null) {
             tpaManager.clearAll();
-        }
-
-        if (economyManager != null) {
-            economyManager.saveAllSync();
-        }
-
-        if (vaultEconomyProvider != null) {
-            Bukkit.getServicesManager().unregister(net.milkbowl.vault.economy.Economy.class, vaultEconomyProvider);
         }
 
         getLogger().info("NexusWarp has been disabled!");

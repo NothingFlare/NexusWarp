@@ -1,8 +1,7 @@
 package me.nexuswarp.command.eco;
 
 import me.nexuswarp.NexusWarpPlugin;
-import me.nexuswarp.economy.MaxMoneyException;
-import me.nexuswarp.economy.NoLoanPermittedException;
+import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -10,12 +9,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 public class PayCommand implements CommandExecutor, TabCompleter {
 
@@ -37,70 +34,75 @@ public class PayCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        if (!plugin.getEconomyManager().isAvailable()) {
+            player.sendMessage(plugin.getLanguageManager().getMessage("eco_vault_not_found"));
+            return true;
+        }
+
         if (args.length < 2) {
             player.sendMessage(plugin.getLanguageManager().getMessage("usage_pay"));
             return true;
         }
 
-        String targetName = args[0];
-        UUID targetUuid = plugin.getEconomyManager().getUuidByName(targetName);
-        if (targetUuid == null) {
+        Player target = Bukkit.getPlayer(args[0]);
+        if (target == null || !target.isOnline()) {
             player.sendMessage(plugin.getLanguageManager().getMessage("target_not_online"));
             return true;
         }
 
-        if (targetUuid.equals(player.getUniqueId())) {
+        if (target.getUniqueId().equals(player.getUniqueId())) {
             player.sendMessage(plugin.getLanguageManager().getMessage("eco_pay_self"));
             return true;
         }
 
-        BigDecimal amount;
+        double amount;
         try {
-            amount = new BigDecimal(args[1]);
+            amount = Double.parseDouble(args[1]);
         } catch (NumberFormatException e) {
             player.sendMessage(plugin.getLanguageManager().getMessage("eco_invalid_amount"));
             return true;
         }
 
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+        if (amount <= 0.0 || Double.isNaN(amount) || Double.isInfinite(amount)) {
             player.sendMessage(plugin.getLanguageManager().getMessage("eco_pay_must_be_positive"));
             return true;
         }
 
-        BigDecimal minPay = plugin.getEconomyManager().getMinimumPayAmount();
-        if (amount.compareTo(minPay) < 0) {
+        double minPay = plugin.getEconomyManager().getMinimumPayAmount().doubleValue();
+        if (amount < minPay) {
             String formattedMin = plugin.getEconomyManager().format(minPay);
             player.sendMessage(plugin.getLanguageManager().getMessage("eco_minimum_pay_amount", "amount", formattedMin));
             return true;
         }
 
-        if (!plugin.getEconomyManager().hasEnough(player.getUniqueId(), amount)) {
+        if (!plugin.getEconomyManager().has(player, amount)) {
             player.sendMessage(plugin.getLanguageManager().getMessage("eco_insufficient_funds"));
             return true;
         }
 
-        try {
-            plugin.getEconomyManager().withdraw(player.getUniqueId(), amount);
-            plugin.getEconomyManager().deposit(targetUuid, amount);
-
-            String formattedAmount = plugin.getEconomyManager().format(amount);
-            String resolvedTargetName = plugin.getEconomyManager().getNameByUuid(targetUuid);
-
-            player.sendMessage(plugin.getLanguageManager().getMessage("eco_pay_sent",
-                    "player", resolvedTargetName,
-                    "amount", formattedAmount));
-
-            Player targetPlayer = Bukkit.getPlayer(targetUuid);
-            if (targetPlayer != null && targetPlayer.isOnline()) {
-                targetPlayer.sendMessage(plugin.getLanguageManager().getMessage("eco_pay_received",
-                        "player", player.getName(),
-                        "amount", formattedAmount));
-            }
-        } catch (NoLoanPermittedException e) {
+        EconomyResponse withdrawResp = plugin.getEconomyManager().withdraw(player, amount);
+        if (!withdrawResp.transactionSuccess()) {
             player.sendMessage(plugin.getLanguageManager().getMessage("eco_insufficient_funds"));
-        } catch (MaxMoneyException e) {
-            player.sendMessage(plugin.getLanguageManager().getMessage("eco_max_money_error"));
+            return true;
         }
+
+        EconomyResponse depositResp = plugin.getEconomyManager().deposit(target, amount);
+        if (!depositResp.transactionSuccess()) {
+            // Refund sender in case deposit failed
+            plugin.getEconomyManager().deposit(player, amount);
+            player.sendMessage(plugin.getLanguageManager().getMessage("eco_max_money_error"));
+            return true;
+        }
+
+        String formattedAmount = plugin.getEconomyManager().format(amount);
+
+        player.sendMessage(plugin.getLanguageManager().getMessage("eco_pay_sent",
+                "player", target.getName(),
+                "amount", formattedAmount));
+
+        target.sendMessage(plugin.getLanguageManager().getMessage("eco_pay_received",
+                "player", player.getName(),
+                "amount", formattedAmount));
 
         return true;
     }

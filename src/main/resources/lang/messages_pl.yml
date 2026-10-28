@@ -94,3 +94,5 @@ spawn_teleport_other: "&aGracz &6{player} &azostał przeteleportowany na spawn."
 hub_teleport_other: "&aGracz &6{player} &azostał przeteleportowany do huba."
 setspawn_success: "&aPunkt spawnu został ustawiony na Twoje obecne współrzędne!"
 sethub_success: "&aPunkt huba został ustawiony na Twoje obecne współrzędne!"
+
+eco_vault_not_found: "&cSystem ekonomii jest niedostępny: nie znaleziono Vault lub pluginu ekonomii!"

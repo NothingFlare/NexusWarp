@@ -94,3 +94,5 @@ spawn_teleport_other: "&aプレイヤー &6{player} &aをスポーン地点へ�
 hub_teleport_other: "&aプレイヤー &6{player} &aをハブへテレポートしました。"
 setspawn_success: "&aスポーン地点を現在の座標に設定しました！"
 sethub_success: "&aハブ地点を現在の座標に設定しました！"
+
+eco_vault_not_found: "&c経済システムが利用できません: Vault または経済プラグインが見つかりません！"

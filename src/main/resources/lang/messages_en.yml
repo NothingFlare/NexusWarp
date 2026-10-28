@@ -93,3 +93,5 @@ spawn_teleport_other: "&aPlayer &6{player} &ateleported to spawn."
 hub_teleport_other: "&aPlayer &6{player} &ateleported to hub."
 setspawn_success: "&aSpawn location set to your current coordinates!"
 sethub_success: "&aHub location set to your current coordinates!"
+
+eco_vault_not_found: "&cEconomy is unavailable: Vault or an economy provider was not found!"

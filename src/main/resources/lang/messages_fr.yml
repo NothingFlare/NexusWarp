@@ -94,3 +94,5 @@ spawn_teleport_other: "&aLe joueur &6{player} &aa été téléporté au spawn."
 hub_teleport_other: "&aLe joueur &6{player} &aa été téléporté au hub."
 setspawn_success: "&aLe point de spawn a été défini sur vos coordonnées actuelles !"
 sethub_success: "&aLe point de hub a été défini sur vos coordonnées actuelles !"
+
+eco_vault_not_found: "&cSystème économique indisponible : Vault ou un plugin d'économie est introuvable !"
