@@ -18,6 +18,10 @@ economy:
   # Минимальная сумма для перевода командой /pay
   minimum-pay-amount: 0.01
 
+  # Balancetop cache update interval in seconds (default: 60)
+  # Интервал автоматического обновления топа богачей (/baltop) в секундах (по умолчанию: 60)
+  baltop-update-interval: 60
+
 # Spawn command configuration / Настройка точки спавна (/spawn)
 # By default disabled / По умолчанию выключено
 spawn:

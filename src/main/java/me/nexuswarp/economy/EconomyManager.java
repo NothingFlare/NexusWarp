@@ -1,6 +1,7 @@
 package me.nexuswarp.economy;
 
 import me.nexuswarp.NexusWarpPlugin;
+import me.nexuswarp.util.ServerScheduler;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
@@ -9,16 +10,20 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class EconomyManager {
 
     private final NexusWarpPlugin plugin;
     private Economy vaultEconomy;
     private BigDecimal minimumPayAmount = new BigDecimal("0.01");
+    private int baltopInterval = 60;
+
+    private final AtomicBoolean isCalculatingBaltop = new AtomicBoolean(false);
+    private volatile List<BalanceTopEntry> cachedBaltop = Collections.emptyList();
+    private volatile double cachedTotalServerMoney = 0.0;
+    private volatile long lastBaltopCalculateTime = 0L;
 
     public EconomyManager(NexusWarpPlugin plugin) {
         this.plugin = plugin;
@@ -26,6 +31,10 @@ public class EconomyManager {
 
     public void loadSettings() {
         this.minimumPayAmount = new BigDecimal(plugin.getConfig().getString("economy.minimum-pay-amount", "0.01"));
+        this.baltopInterval = plugin.getConfig().getInt("economy.baltop-update-interval", 60);
+        if (this.baltopInterval < 5) {
+            this.baltopInterval = 5;
+        }
         hookVault();
     }
 
@@ -201,6 +210,99 @@ public class EconomyManager {
         public double getBalance() {
             return balance;
         }
+    }
+
+    public int getBaltopInterval() {
+        return baltopInterval;
+    }
+
+    public List<BalanceTopEntry> getBaltop() {
+        return cachedBaltop;
+    }
+
+    public double getTotalServerMoney() {
+        return cachedTotalServerMoney;
+    }
+
+    public long getLastBaltopCalculateTime() {
+        return lastBaltopCalculateTime;
+    }
+
+    public boolean isCalculatingBaltop() {
+        return isCalculatingBaltop.get();
+    }
+
+    public void updateBaltopAsync() {
+        if (!isAvailable()) {
+            return;
+        }
+        if (!isCalculatingBaltop.compareAndSet(false, true)) {
+            return;
+        }
+
+        ServerScheduler.runAsync(plugin, () -> {
+            try {
+                calculateBaltop();
+            } catch (Throwable t) {
+                plugin.getLogger().warning("[NexusWarp] Error while updating balancetop: " + t.getMessage());
+            } finally {
+                isCalculatingBaltop.set(false);
+            }
+        });
+    }
+
+    private void calculateBaltop() {
+        if (!isAvailable()) {
+            return;
+        }
+
+        Map<UUID, BalanceTopEntry> map = new HashMap<>();
+        double total = 0.0;
+
+        OfflinePlayer[] offlinePlayers = Bukkit.getOfflinePlayers();
+        if (offlinePlayers != null) {
+            for (OfflinePlayer op : offlinePlayers) {
+                if (op == null) continue;
+                UUID uuid = op.getUniqueId();
+                String name = op.getName();
+                if (name == null || name.isEmpty()) continue;
+
+                try {
+                    double bal = getBalance(op);
+                    if (bal > 0.0) {
+                        map.put(uuid, new BalanceTopEntry(name, bal));
+                        total += bal;
+                    }
+                } catch (Throwable ignored) {}
+            }
+        }
+
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (p == null) continue;
+            UUID uuid = p.getUniqueId();
+            String name = p.getName();
+
+            try {
+                double bal = getBalance(p);
+                BalanceTopEntry existing = map.get(uuid);
+                if (existing != null) {
+                    total -= existing.getBalance();
+                }
+                if (bal > 0.0) {
+                    map.put(uuid, new BalanceTopEntry(name, bal));
+                    total += bal;
+                } else {
+                    map.remove(uuid);
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        List<BalanceTopEntry> list = new ArrayList<>(map.values());
+        list.sort((a, b) -> Double.compare(b.getBalance(), a.getBalance()));
+
+        this.cachedBaltop = Collections.unmodifiableList(list);
+        this.cachedTotalServerMoney = total;
+        this.lastBaltopCalculateTime = System.currentTimeMillis();
     }
 
     public List<BalanceTopEntry> getBaltopOnline() {

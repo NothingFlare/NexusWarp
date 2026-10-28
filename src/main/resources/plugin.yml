@@ -65,6 +65,10 @@ commands:
     usage: /balancetop [page]
     aliases: [baltop]
     permission: nexuswarp.balancetop
+  baltop:
+    description: Топ богатых игроков сервера / Top richest players leaderboard
+    usage: /baltop [page]
+    permission: nexuswarp.balancetop
   spawn:
     description: Телепортация на спавн / Teleport to spawn location
     usage: /spawn [player]

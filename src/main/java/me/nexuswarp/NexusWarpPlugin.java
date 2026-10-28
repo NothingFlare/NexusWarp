@@ -40,6 +40,7 @@ public class NexusWarpPlugin extends JavaPlugin {
     private EconomyManager economyManager;
 
     private ServerScheduler.TaskHandle tickerTask;
+    private ServerScheduler.TaskHandle baltopTask;
 
     @Override
     public void onEnable() {
@@ -75,6 +76,9 @@ public class NexusWarpPlugin extends JavaPlugin {
             tpaManager.tickExpire();
         }, 1L, 1L);
 
+        // Start asynchronous periodic baltop cache update task (every 60s by default)
+        startBaltopTask();
+
         // Print startup banner matching Photo 1
         printBanner(false);
 
@@ -82,6 +86,18 @@ public class NexusWarpPlugin extends JavaPlugin {
         if (getConfig().getBoolean("updates.check-for-updates", true)) {
             new UpdateChecker(getDescription().getVersion(), getLogger(), languageManager).checkAsync();
         }
+    }
+
+    public void startBaltopTask() {
+        if (baltopTask != null) {
+            baltopTask.cancel();
+            baltopTask = null;
+        }
+
+        long interval = Math.max(5, economyManager.getBaltopInterval());
+        this.baltopTask = ServerScheduler.runTimerAsync(this, () -> {
+            economyManager.updateBaltopAsync();
+        }, 1L, interval);
     }
 
     private void setupVault() {
@@ -114,7 +130,9 @@ public class NexusWarpPlugin extends JavaPlugin {
         registerCommand("balance", balanceCommand);
         registerCommand("bal", balanceCommand);
         registerCommand("pay", new PayCommand(this));
-        registerCommand("balancetop", new BalanceTopCommand(this));
+        BalanceTopCommand baltopCommand = new BalanceTopCommand(this);
+        registerCommand("balancetop", baltopCommand);
+        registerCommand("baltop", baltopCommand);
 
         // Spawn & Hub commands
         registerCommand("spawn", new SpawnCommand(this));
@@ -145,6 +163,11 @@ public class NexusWarpPlugin extends JavaPlugin {
             tickerTask = null;
         }
 
+        if (baltopTask != null) {
+            baltopTask.cancel();
+            baltopTask = null;
+        }
+
         if (tpaManager != null) {
             tpaManager.clearAll();
         }
@@ -157,6 +180,7 @@ public class NexusWarpPlugin extends JavaPlugin {
             configManager.load();
             languageManager.load();
             economyManager.loadSettings();
+            startBaltopTask();
             printBanner(true);
             if (onComplete != null) {
                 ServerScheduler.runGlobal(this, onComplete);

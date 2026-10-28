@@ -40,7 +40,18 @@ public class BalanceTopCommand implements CommandExecutor, TabCompleter {
             } catch (NumberFormatException ignored) {}
         }
 
-        List<EconomyManager.BalanceTopEntry> baltop = plugin.getEconomyManager().getBaltopOnline();
+        List<EconomyManager.BalanceTopEntry> baltop = plugin.getEconomyManager().getBaltop();
+        double serverTotal = plugin.getEconomyManager().getTotalServerMoney();
+
+        if (baltop.isEmpty() && plugin.getEconomyManager().getLastBaltopCalculateTime() == 0L) {
+            plugin.getEconomyManager().updateBaltopAsync();
+            baltop = plugin.getEconomyManager().getBaltopOnline();
+            serverTotal = 0.0;
+            for (EconomyManager.BalanceTopEntry e : baltop) {
+                serverTotal += e.getBalance();
+            }
+        }
+
         int totalAccounts = baltop.size();
         int maxPages = Math.max(1, (int) Math.ceil((double) totalAccounts / PAGE_SIZE));
 
@@ -48,10 +59,6 @@ public class BalanceTopCommand implements CommandExecutor, TabCompleter {
             page = maxPages;
         }
 
-        double serverTotal = 0;
-        for (EconomyManager.BalanceTopEntry e : baltop) {
-            serverTotal += e.getBalance();
-        }
         String formattedTotal = plugin.getEconomyManager().format(serverTotal);
 
         sender.sendMessage(plugin.getLanguageManager().getMessage("eco_baltop_header",
