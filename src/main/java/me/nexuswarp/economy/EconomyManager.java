@@ -45,10 +45,21 @@ public class EconomyManager {
     private int baltopEntryLimit = -1;
     private boolean baltopShowNpcs = false;
 
+    // Smart incremental baltop data structures
+    private final Object baltopLock = new Object();
+    private final Map<UUID, BalanceTopEntry> baltopEntryMap = new ConcurrentHashMap<>();
+    private final List<BalanceTopEntry> baltopSortedList = new ArrayList<>();
+
     private final AtomicBoolean isCalculatingBaltop = new AtomicBoolean(false);
     private volatile List<BalanceTopEntry> cachedBaltop = Collections.emptyList();
     private volatile BigDecimal cachedTotalServerMoney = BigDecimal.ZERO;
     private volatile long lastBaltopCalculateTime = 0L;
+
+    public static final Comparator<BalanceTopEntry> BALTOP_COMPARATOR = (a, b) -> {
+        int c = b.getBalance().compareTo(a.getBalance());
+        if (c != 0) return c;
+        return a.getUuid().compareTo(b.getUuid());
+    };
 
     public static class BalanceTopEntry {
         private final UUID uuid;
@@ -56,9 +67,9 @@ public class EconomyManager {
         private final BigDecimal balance;
 
         public BalanceTopEntry(UUID uuid, String name, BigDecimal balance) {
-            this.uuid = uuid;
-            this.name = name;
-            this.balance = balance;
+            this.uuid = Objects.requireNonNull(uuid, "uuid cannot be null");
+            this.name = name != null ? name : uuid.toString().substring(0, 8);
+            this.balance = balance != null ? balance : BigDecimal.ZERO;
         }
 
         public UUID getUuid() {
@@ -71,6 +82,19 @@ public class EconomyManager {
 
         public BigDecimal getBalance() {
             return balance;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            BalanceTopEntry that = (BalanceTopEntry) o;
+            return uuid.equals(that.uuid);
+        }
+
+        @Override
+        public int hashCode() {
+            return uuid.hashCode();
         }
     }
 
@@ -199,6 +223,7 @@ public class EconomyManager {
             account.setLastAccountName(name);
             nameToUuid.put(name.toLowerCase(Locale.ROOT), uuid);
             saveAccountAsync(account);
+            updateBaltopName(uuid, name);
         }
         return account;
     }
@@ -212,6 +237,7 @@ public class EconomyManager {
         accounts.put(uuid, account);
         nameToUuid.put(resolvedName.toLowerCase(Locale.ROOT), uuid);
         saveAccountAsync(account);
+        updateBaltopForUser(uuid, resolvedName, BigDecimal.ZERO, startingBalance);
         return account;
     }
 
@@ -374,6 +400,9 @@ public class EconomyManager {
 
         account.setBalance(finalBalance);
         saveAccountAsync(account);
+
+        // Smart incremental baltop update only for this user
+        updateBaltopForUser(uuid, account.getLastAccountName(), oldBalance, finalBalance);
     }
 
     public synchronized void deposit(UUID uuid, BigDecimal amount, UserBalanceUpdateEvent.Cause cause)
@@ -468,6 +497,7 @@ public class EconomyManager {
         accounts.put(npcUUID, account);
         nameToUuid.put(name.toLowerCase(Locale.ROOT), npcUUID);
         saveAccountBlocking(account);
+        updateBaltopForUser(npcUUID, name, BigDecimal.ZERO, startingBalance);
         return true;
     }
 
@@ -492,6 +522,7 @@ public class EconomyManager {
         if (file.exists()) {
             file.delete();
         }
+        removeBaltopForUser(uuid);
     }
 
     // -------------------------------------------------------------
@@ -545,7 +576,7 @@ public class EconomyManager {
     }
 
     // -------------------------------------------------------------
-    // Baltop Cache & Calculation
+    // Smart Baltop Cache & Incremental Updates
     // -------------------------------------------------------------
 
     public int getBaltopInterval() {
@@ -553,6 +584,9 @@ public class EconomyManager {
     }
 
     public List<BalanceTopEntry> getBaltop() {
+        if (cachedBaltop.isEmpty() && lastBaltopCalculateTime == 0L) {
+            calculateBaltop();
+        }
         return cachedBaltop;
     }
 
@@ -584,45 +618,142 @@ public class EconomyManager {
         });
     }
 
+    /**
+     * Performs a full baseline recalculation of baltop from all accounts.
+     */
     public void calculateBaltop() {
-        List<BalanceTopEntry> list = new ArrayList<>();
-        BigDecimal total = BigDecimal.ZERO;
+        synchronized (baltopLock) {
+            baltopEntryMap.clear();
+            baltopSortedList.clear();
+            BigDecimal total = BigDecimal.ZERO;
 
-        for (UserAccount account : accounts.values()) {
-            if (account == null) continue;
-            if (!baltopShowNpcs && account.isNpc()) {
-                continue;
+            for (UserAccount account : accounts.values()) {
+                if (account == null) continue;
+                BigDecimal bal = account.getBalance();
+                total = total.add(bal, MATH_CONTEXT);
+
+                if (!qualifiesForBaltop(account, bal)) {
+                    continue;
+                }
+
+                BalanceTopEntry entry = new BalanceTopEntry(account.getUuid(), account.getLastAccountName(), bal);
+                baltopEntryMap.put(account.getUuid(), entry);
+                baltopSortedList.add(entry);
             }
 
-            // Exclude permission check if online
-            Player player = Bukkit.getPlayer(account.getUuid());
-            if (player != null && (player.hasPermission("nexuswarp.balancetop.exclude") ||
-                    player.hasPermission("essentials.balancetop.exclude"))) {
-                continue;
-            }
+            baltopSortedList.sort(BALTOP_COMPARATOR);
+            updateCachedBaltopSnapshot();
 
-            BigDecimal bal = account.getBalance();
-            total = total.add(bal, MATH_CONTEXT);
-
-            if (!baltopShowZero && bal.signum() <= 0) {
-                continue;
-            }
-            if (bal.compareTo(baltopMinBalance) < 0) {
-                continue;
-            }
-
-            list.add(new BalanceTopEntry(account.getUuid(), account.getLastAccountName(), bal));
+            this.cachedTotalServerMoney = total;
+            this.lastBaltopCalculateTime = System.currentTimeMillis();
         }
+    }
 
-        list.sort((a, b) -> b.getBalance().compareTo(a.getBalance()));
-
-        if (baltopEntryLimit > 0 && list.size() > baltopEntryLimit) {
-            list = list.subList(0, baltopEntryLimit);
+    private void updateCachedBaltopSnapshot() {
+        if (baltopEntryLimit > 0 && baltopSortedList.size() > baltopEntryLimit) {
+            this.cachedBaltop = Collections.unmodifiableList(new ArrayList<>(baltopSortedList.subList(0, baltopEntryLimit)));
+        } else {
+            this.cachedBaltop = Collections.unmodifiableList(new ArrayList<>(baltopSortedList));
         }
+    }
 
-        this.cachedBaltop = Collections.unmodifiableList(list);
-        this.cachedTotalServerMoney = total;
-        this.lastBaltopCalculateTime = System.currentTimeMillis();
+    /**
+     * Smartly and incrementally updates baltop only for the user whose balance changed.
+     * Takes O(log N) time instead of re-scanning or re-sorting all users.
+     */
+    public void updateBaltopForUser(UUID uuid, String name, BigDecimal oldBalance, BigDecimal newBalance) {
+        if (uuid == null) return;
+        if (oldBalance == null) oldBalance = BigDecimal.ZERO;
+        if (newBalance == null) newBalance = BigDecimal.ZERO;
+
+        UserAccount account = getAccount(uuid);
+        if (account == null) return;
+
+        synchronized (baltopLock) {
+            // 1. Incrementally update total server money
+            BigDecimal delta = newBalance.subtract(oldBalance, MATH_CONTEXT);
+            cachedTotalServerMoney = cachedTotalServerMoney.add(delta, MATH_CONTEXT);
+            if (cachedTotalServerMoney.signum() < 0) {
+                cachedTotalServerMoney = BigDecimal.ZERO;
+            }
+
+            // 2. Remove old entry if present
+            BalanceTopEntry oldEntry = baltopEntryMap.remove(uuid);
+            if (oldEntry != null) {
+                int oldIndex = Collections.binarySearch(baltopSortedList, oldEntry, BALTOP_COMPARATOR);
+                if (oldIndex >= 0) {
+                    baltopSortedList.remove(oldIndex);
+                } else {
+                    baltopSortedList.remove(oldEntry);
+                }
+            }
+
+            // 3. Insert at new sorted position if player qualifies
+            if (qualifiesForBaltop(account, newBalance)) {
+                String resolvedName = name != null ? name : account.getLastAccountName();
+                BalanceTopEntry newEntry = new BalanceTopEntry(uuid, resolvedName, newBalance);
+                baltopEntryMap.put(uuid, newEntry);
+
+                int newIndex = Collections.binarySearch(baltopSortedList, newEntry, BALTOP_COMPARATOR);
+                if (newIndex < 0) {
+                    newIndex = -newIndex - 1;
+                }
+                baltopSortedList.add(newIndex, newEntry);
+            }
+
+            // 4. Update the volatile read snapshot
+            updateCachedBaltopSnapshot();
+        }
+    }
+
+    public void removeBaltopForUser(UUID uuid) {
+        if (uuid == null) return;
+        synchronized (baltopLock) {
+            BalanceTopEntry oldEntry = baltopEntryMap.remove(uuid);
+            if (oldEntry != null) {
+                int oldIndex = Collections.binarySearch(baltopSortedList, oldEntry, BALTOP_COMPARATOR);
+                if (oldIndex >= 0) {
+                    baltopSortedList.remove(oldIndex);
+                } else {
+                    baltopSortedList.remove(oldEntry);
+                }
+                cachedTotalServerMoney = cachedTotalServerMoney.subtract(oldEntry.getBalance(), MATH_CONTEXT);
+                if (cachedTotalServerMoney.signum() < 0) {
+                    cachedTotalServerMoney = BigDecimal.ZERO;
+                }
+                updateCachedBaltopSnapshot();
+            }
+        }
+    }
+
+    public void updateBaltopName(UUID uuid, String newName) {
+        if (uuid == null || newName == null) return;
+        synchronized (baltopLock) {
+            BalanceTopEntry oldEntry = baltopEntryMap.get(uuid);
+            if (oldEntry != null && !newName.equals(oldEntry.getName())) {
+                int idx = Collections.binarySearch(baltopSortedList, oldEntry, BALTOP_COMPARATOR);
+                if (idx >= 0) {
+                    BalanceTopEntry updated = new BalanceTopEntry(uuid, newName, oldEntry.getBalance());
+                    baltopSortedList.set(idx, updated);
+                    baltopEntryMap.put(uuid, updated);
+                    updateCachedBaltopSnapshot();
+                }
+            }
+        }
+    }
+
+    public boolean qualifiesForBaltop(UserAccount account, BigDecimal balance) {
+        if (account == null) return false;
+        if (!baltopShowNpcs && account.isNpc()) return false;
+        if (!baltopShowZero && balance.signum() <= 0) return false;
+        if (balance.compareTo(baltopMinBalance) < 0) return false;
+
+        Player player = Bukkit.getPlayer(account.getUuid());
+        if (player != null && (player.hasPermission("nexuswarp.balancetop.exclude") ||
+                player.hasPermission("essentials.balancetop.exclude"))) {
+            return false;
+        }
+        return true;
     }
 
     public List<BalanceTopEntry> getBaltopOnline() {
@@ -633,7 +764,7 @@ public class EconomyManager {
             }
             list.add(new BalanceTopEntry(p.getUniqueId(), p.getName(), getBalance(p.getUniqueId())));
         }
-        list.sort((a, b) -> b.getBalance().compareTo(a.getBalance()));
+        list.sort(BALTOP_COMPARATOR);
         return list;
     }
 
