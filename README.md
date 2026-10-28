@@ -7,7 +7,7 @@
 [![Minecraft Version](https://img.shields.io/badge/Minecraft-1.20+-2b2b2b.svg?style=flat-square)](https://papermc.io)
 [![Java Version](https://img.shields.io/badge/Java-17+-2b2b2b.svg?style=flat-square)](https://www.oracle.com/java/)
 [![Folia](https://img.shields.io/badge/Folia-Supported-2b2b2b.svg?style=flat-square)](https://papermc.io/software/folia)
-[![Release](https://img.shields.io/badge/Release-1.2-2b2b2b.svg?style=flat-square)](https://github.com/NothingFlare/NexusWarp/releases)
+[![Release](https://img.shields.io/badge/Release-1.3-2b2b2b.svg?style=flat-square)](https://github.com/NothingFlare/NexusWarp/releases)
 [![License](https://img.shields.io/badge/License-MIT-2b2b2b.svg?style=flat-square)](LICENSE)
 
 [Overview](#overview) • [Key Features](#key-features) • [Compatibility](#compatibility) • [Commands and Permissions](#commands-and-permissions) • [Configuration](#configuration) • [Localization](#localization) • [Installation](#installation) • [Compiling from Source](#compiling-from-source)
@@ -20,7 +20,7 @@
 
 NexusWarp is an optimized, all-in-one teleportation, messaging, and economy solution designed specifically for modern Minecraft server software. Standard Bukkit/Spigot implementations often suffer from synchronous chunk loading spikes and thread safety violations on multi-threaded servers. NexusWarp addresses these architectural limitations by fully supporting Folia's regional schedulers alongside Paper's asynchronous chunk loading pipelines.
 
-Starting with version 1.2, NexusWarp incorporates native Vault Economy API integration, complete player and administrative teleportation mechanics (`/tpa`, `/tp`, `/tphere`), spawn and hub management (`/spawn`, `/hub`), private messaging (`/msg`, `/reply`), destination safety validation, world and dimension restrictions, and an automated GitHub update checker.
+Starting with version 1.3, NexusWarp incorporates native Vault Economy API integration, complete player and administrative teleportation mechanics (`/tpa`, `/tp`, `/tphere`), spawn and hub management (`/spawn`, `/hub`), private messaging (`/msg`, `/reply`), destination safety validation, world and dimension restrictions, and an automated GitHub update checker.
 
 ---
 
@@ -258,7 +258,7 @@ Pre-configured language files are located in `plugins/NexusWarp/lang/`:
 
 ## Installation
 
-1. Download `NexusWarp-1.2.jar` from the [releases page](https://github.com/NothingFlare/NexusWarp/releases).
+1. Download `NexusWarp-1.3.jar` from the [releases page](https://github.com/NothingFlare/NexusWarp/releases).
 2. Place the jar file into your server's `plugins/` directory.
 3. If using economy features, install [Vault](https://www.spigotmc.org/resources/vault.34315/) alongside any Vault-compatible economy provider (e.g., EssentialsX).
 4. Start or restart the server to generate default configurations and language files.
@@ -284,7 +284,7 @@ mvn clean package
 
 The resulting binary will be located in:
 ```text
-target/NexusWarp-1.2.jar
+target/NexusWarp-1.3.jar
 ```
 
 ---

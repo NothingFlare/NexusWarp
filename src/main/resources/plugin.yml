@@ -52,6 +52,10 @@ commands:
     usage: /balance [player]
     aliases: [bal, money]
     permission: nexuswarp.balance
+  bal:
+    description: Посмотреть баланс / Check account balance
+    usage: /bal [player]
+    permission: nexuswarp.balance
   pay:
     description: Перевести деньги другому игроку / Transfer money to another player
     usage: /pay <player> <amount>

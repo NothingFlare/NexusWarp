@@ -110,7 +110,9 @@ public class NexusWarpPlugin extends JavaPlugin {
 
         // Economy commands (via Vault)
         registerCommand("eco", new EcoCommand(this));
-        registerCommand("balance", new BalanceCommand(this));
+        BalanceCommand balanceCommand = new BalanceCommand(this);
+        registerCommand("balance", balanceCommand);
+        registerCommand("bal", balanceCommand);
         registerCommand("pay", new PayCommand(this));
         registerCommand("balancetop", new BalanceTopCommand(this));
 
