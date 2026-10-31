@@ -76,6 +76,7 @@ eco_pay_received: "&aHai ricevuto &6{amount} &ada &6{player}&a."
 
 eco_baltop_header: "&6==== [ &eClassifica Saldi &7(Pagina {page}/{max_pages}) &6] ==== &7Totale server: &e{total}"
 eco_baltop_entry: "&e{rank}. &f{player}&7: &6{amount}"
+eco_baltop_empty: "&7Non ci sono ancora giocatori nella classifica dei più ricchi."
 
 console_updates_checking: "[NexusWarp] Controllo aggiornamenti..."
 console_updates_fail: "[NexusWarp] Impossibile recuperare l'ultima versione dall'API di GitHub."

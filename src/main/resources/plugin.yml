@@ -170,6 +170,9 @@ permissions:
   nexuswarp.balancetop.exclude:
     description: Исключение из топа богачей / Exclude from balance top ranking
     default: false
+  essentials.balancetop.exclude:
+    description: Исключение из топа богачей (Essentials bridge) / Exclude from balance top ranking
+    default: false
   nexuswarp.playtime:
     description: Доступ к просмотру своего игрового времени / Access to check own playtime
     default: true

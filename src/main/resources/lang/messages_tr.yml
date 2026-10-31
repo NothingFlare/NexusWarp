@@ -76,6 +76,7 @@ eco_pay_received: "&6{player} &aadlı oyuncudan &6{amount} &aalındı."
 
 eco_baltop_header: "&6==== [ &eZenginler Listesi &7(Sayfa {page}/{max_pages}) &6] ==== &7Sunucu Toplamı: &e{total}"
 eco_baltop_entry: "&e{rank}. &f{player}&7: &6{amount}"
+eco_baltop_empty: "&7Zenginler listesinde henüz oyuncu yok."
 
 console_updates_checking: "[NexusWarp] Güncellemeler kontrol ediliyor..."
 console_updates_fail: "[NexusWarp] GitHub API üzerinden en son sürüm bilgisi alınamadı."

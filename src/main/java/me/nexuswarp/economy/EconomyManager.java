@@ -254,6 +254,8 @@ public class EconomyManager {
                 account.setLastIp(player.getAddress().getAddress().getHostAddress());
             }
             saveAccountAsync(account);
+            // Ensure player is reflected in baltop ranking
+            updateBaltopForUser(player.getUniqueId(), player.getName(), account.getBalance(), account.getBalance());
         }
     }
 
@@ -757,6 +759,16 @@ public class EconomyManager {
         }
     }
 
+    public boolean isExcludedFromBaltop(Player player) {
+        if (player == null) return false;
+        // Operators are never excluded by default; only exclude if the node is explicitly set on them
+        if (player.isOp()) {
+            return (player.isPermissionSet("nexuswarp.balancetop.exclude") && player.hasPermission("nexuswarp.balancetop.exclude"))
+                    || (player.isPermissionSet("essentials.balancetop.exclude") && player.hasPermission("essentials.balancetop.exclude"));
+        }
+        return player.hasPermission("nexuswarp.balancetop.exclude") || player.hasPermission("essentials.balancetop.exclude");
+    }
+
     public boolean qualifiesForBaltop(UserAccount account, BigDecimal balance) {
         if (account == null) return false;
         if (!baltopShowNpcs && account.isNpc()) return false;
@@ -764,8 +776,7 @@ public class EconomyManager {
         if (balance.compareTo(baltopMinBalance) < 0) return false;
 
         Player player = Bukkit.getPlayer(account.getUuid());
-        if (player != null && (player.hasPermission("nexuswarp.balancetop.exclude") ||
-                player.hasPermission("essentials.balancetop.exclude"))) {
+        if (player != null && isExcludedFromBaltop(player)) {
             return false;
         }
         return true;
@@ -774,7 +785,7 @@ public class EconomyManager {
     public List<BalanceTopEntry> getBaltopOnline() {
         List<BalanceTopEntry> list = new ArrayList<>();
         for (Player p : Bukkit.getOnlinePlayers()) {
-            if (p.hasPermission("nexuswarp.balancetop.exclude") || p.hasPermission("essentials.balancetop.exclude")) {
+            if (isExcludedFromBaltop(p)) {
                 continue;
             }
             list.add(new BalanceTopEntry(p.getUniqueId(), p.getName(), getBalance(p.getUniqueId())));

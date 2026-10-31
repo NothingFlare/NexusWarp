@@ -76,6 +76,7 @@ eco_pay_received: "&6{player} &aから &6{amount} &aを受け取りました。"
 
 eco_baltop_header: "&6==== [ &e所持金ランキング &7({page}/{max_pages} ページ) &6] ==== &7サーバー合計: &e{total}"
 eco_baltop_entry: "&e{rank}. &f{player}&7: &6{amount}"
+eco_baltop_empty: "&7残高トップリストにはまだプレイヤーがいません。"
 
 console_updates_checking: "[NexusWarp] アップデートを確認しています..."
 console_updates_fail: "[NexusWarp] GitHub API から最新バージョンを取得できませんでした。"

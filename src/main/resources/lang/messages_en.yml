@@ -86,6 +86,7 @@ usage_payconfirmtoggle: "&cUsage: &e/payconfirmtoggle [on|off]"
 
 eco_baltop_header: "&6==== [ &eBalance Top &7(Page {page}/{max_pages}) &6] ==== &7Server Total: &e{total}"
 eco_baltop_entry: "&e{rank}. &f{player}&7: &6{amount}"
+eco_baltop_empty: "&7There are no players in the top balances list yet."
 
 console_updates_checking: "[NexusWarp] Checking for updates..."
 console_updates_fail: "[NexusWarp] Failed to retrieve the latest version from GitHub API."

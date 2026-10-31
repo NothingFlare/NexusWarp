@@ -76,6 +76,7 @@ eco_pay_received: "&a已收到来自 &6{player} &a的转账 &6{amount}&a。"
 
 eco_baltop_header: "&6==== [ &e财富排行榜 &7(第 {page}/{max_pages} 页) &6] ==== &7全服总资产: &e{total}"
 eco_baltop_entry: "&e{rank}. &f{player}&7: &6{amount}"
+eco_baltop_empty: "&7财富榜上暂无玩家。"
 
 console_updates_checking: "[NexusWarp] 正在检查更新..."
 console_updates_fail: "[NexusWarp] 无法从 GitHub API 获取最新版本。"

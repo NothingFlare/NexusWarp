@@ -76,6 +76,7 @@ eco_pay_received: "&aOtrzymano &6{amount} &aod gracza &6{player}&a."
 
 eco_baltop_header: "&6==== [ &eNajbogatsi gracze &7(Strona {page}/{max_pages}) &6] ==== &7Łącznie na serwerze: &e{total}"
 eco_baltop_entry: "&e{rank}. &f{player}&7: &6{amount}"
+eco_baltop_empty: "&7W rankingu bogaczy nie ma jeszcze żadnych graczy."
 
 console_updates_checking: "[NexusWarp] Sprawdzanie aktualizacji..."
 console_updates_fail: "[NexusWarp] Nie udało się pobrać najnowszej wersji z API GitHuba."

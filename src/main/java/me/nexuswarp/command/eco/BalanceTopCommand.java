@@ -54,7 +54,7 @@ public class BalanceTopCommand implements CommandExecutor, TabCompleter {
         List<EconomyManager.BalanceTopEntry> baltop = plugin.getEconomyManager().getBaltop();
         BigDecimal serverTotal = plugin.getEconomyManager().getTotalServerMoney();
 
-        if (baltop.isEmpty() && plugin.getEconomyManager().getLastBaltopCalculateTime() == 0L) {
+        if (baltop.isEmpty()) {
             plugin.getEconomyManager().calculateBaltop();
             baltop = plugin.getEconomyManager().getBaltop();
             serverTotal = plugin.getEconomyManager().getTotalServerMoney();
@@ -73,6 +73,11 @@ public class BalanceTopCommand implements CommandExecutor, TabCompleter {
                 "page", String.valueOf(page),
                 "max_pages", String.valueOf(maxPages),
                 "total", formattedTotal));
+
+        if (totalAccounts == 0) {
+            sender.sendMessage(plugin.getLanguageManager().getMessage("eco_baltop_empty"));
+            return true;
+        }
 
         int startIndex = (page - 1) * PAGE_SIZE;
         int endIndex = Math.min(startIndex + PAGE_SIZE, totalAccounts);

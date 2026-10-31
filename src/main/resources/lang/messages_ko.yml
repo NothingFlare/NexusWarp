@@ -76,6 +76,7 @@ eco_pay_received: "&6{player}&a님으로부터 &6{amount}&a을(를) 받았습니
 
 eco_baltop_header: "&6==== [ &e부자 랭킹 &7({page}/{max_pages} 페이지) &6] ==== &7서버 총액: &e{total}"
 eco_baltop_entry: "&e{rank}. &f{player}&7: &6{amount}"
+eco_baltop_empty: "&7부자 순위에 아직 플레이어가 없습니다."
 
 console_updates_checking: "[NexusWarp] 업데이트 확인 중..."
 console_updates_fail: "[NexusWarp] GitHub API에서 최신 버전을 가져오지 못했습니다."
