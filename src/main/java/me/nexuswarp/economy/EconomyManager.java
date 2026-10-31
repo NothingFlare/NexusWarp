@@ -192,6 +192,10 @@ public class EconomyManager {
         account.setNpcName(yaml.getString("npc-name", null));
         account.setAcceptingPay(yaml.getBoolean("accepting-pay", true));
         account.setPromptPayConfirm(yaml.getBoolean("confirm-pay", false));
+        account.setLastLogin(yaml.getLong("last-login", 0L));
+        account.setLastLogout(yaml.getLong("last-logout", 0L));
+        account.setLastIp(yaml.getString("last-ip", null));
+        account.setLastLocation(yaml.getString("last-location", null));
         account.setDirty(false);
 
         accounts.put(uuid, account);
@@ -243,7 +247,14 @@ public class EconomyManager {
 
     public void onPlayerJoin(Player player) {
         if (player == null) return;
-        getOrCreateAccount(player.getUniqueId(), player.getName());
+        UserAccount account = getOrCreateAccount(player.getUniqueId(), player.getName());
+        if (account != null) {
+            account.setLastLogin(System.currentTimeMillis());
+            if (player.getAddress() != null && player.getAddress().getAddress() != null) {
+                account.setLastIp(player.getAddress().getAddress().getHostAddress());
+            }
+            saveAccountAsync(account);
+        }
     }
 
     public void saveAccountAsync(UserAccount account) {
@@ -263,6 +274,10 @@ public class EconomyManager {
         }
         yaml.set("accepting-pay", account.isAcceptingPay());
         yaml.set("confirm-pay", account.isPromptPayConfirm());
+        if (account.getLastLogin() > 0) yaml.set("last-login", account.getLastLogin());
+        if (account.getLastLogout() > 0) yaml.set("last-logout", account.getLastLogout());
+        if (account.getLastIp() != null) yaml.set("last-ip", account.getLastIp());
+        if (account.getLastLocation() != null) yaml.set("last-location", account.getLastLocation());
 
         try {
             yaml.save(file);

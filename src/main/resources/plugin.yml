@@ -79,6 +79,15 @@ commands:
     usage: /payconfirmtoggle [on|off]
     aliases: [payconfirmon, payconfirmoff]
     permission: nexuswarp.payconfirmtoggle
+  playtime:
+    description: Посмотреть время в игре / Check player playtime
+    usage: /playtime [player]
+    aliases: [ontime, pt]
+    permission: nexuswarp.playtime
+  seen:
+    description: Проверить последний онлайн игрока / Check player last seen information
+    usage: /seen <player>
+    permission: nexuswarp.seen
   spawn:
     description: Телепортация на спавн / Teleport to spawn location
     usage: /spawn [player]
@@ -161,6 +170,30 @@ permissions:
   nexuswarp.balancetop.exclude:
     description: Исключение из топа богачей / Exclude from balance top ranking
     default: false
+  nexuswarp.playtime:
+    description: Доступ к просмотру своего игрового времени / Access to check own playtime
+    default: true
+  nexuswarp.playtime.others:
+    description: Доступ к просмотру игрового времени других игроков / Access to check other players playtime
+    default: op
+  nexuswarp.seen:
+    description: Доступ к команде /seen / Access to /seen command
+    default: true
+  nexuswarp.seen.ip:
+    description: Доступ к просмотру IP в /seen / Access to see IP in /seen
+    default: op
+  nexuswarp.seen.location:
+    description: Доступ к просмотру локации в /seen / Access to see location in /seen
+    default: op
+  nexuswarp.seen.uuid:
+    description: Доступ к просмотру UUID в /seen / Access to see UUID in /seen
+    default: true
+  nexuswarp.seen.firstlogin:
+    description: Доступ к просмотру первого входа в /seen / Access to see first login in /seen
+    default: true
+  nexuswarp.seen.banreason:
+    description: Доступ к просмотру причины бана в /seen / Access to see ban reason in /seen
+    default: true
   nexuswarp.spawn:
     description: Доступ к команде /spawn / Access to /spawn command
     default: true

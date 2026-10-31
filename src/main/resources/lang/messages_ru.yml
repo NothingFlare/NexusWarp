@@ -106,3 +106,19 @@ setspawn_success: "&aТочка спавна успешно установлен
 sethub_success: "&aТочка хаба успешно установлена на ваши текущие координаты!"
 
 eco_vault_not_found: "&cЭкономика недоступна: на сервере не найден Vault или плагин экономики!"
+
+usage_playtime: "&cИспользование: &e/playtime [игрок]"
+playtime_self: "&aВаше игровое время: &6{time}"
+playtime_other: "&aИгровое время игрока &6{player}&a: &6{time}"
+
+usage_seen: "&cИспользование: &e/seen <игрок>"
+seen_never_online: "&cИгрок &6{player} &cникогда не играл на этом сервере!"
+seen_online: "&6{player} &aв сети уже &6{time}&a."
+seen_offline: "&6{player} &cне в сети уже &6{time}&c."
+seen_banned: "&c - Забанен: &f{reason}"
+seen_temp_banned: "&c - Бан истекает через: &f{time}"
+seen_uuid: "&7 - UUID: &f{uuid}"
+seen_first_login: "&7 - Первый вход: &f{time}"
+seen_location: "&7 - Местоположение: &f{world}, {x}, {y}, {z}"
+seen_location_raw: "&7 - Местоположение: &f{location}"
+seen_ip: "&7 - IP-адрес: &f{ip}"

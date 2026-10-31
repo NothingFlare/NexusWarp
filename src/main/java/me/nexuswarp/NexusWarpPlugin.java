@@ -3,7 +3,9 @@ package me.nexuswarp;
 import me.nexuswarp.command.HubCommand;
 import me.nexuswarp.command.MsgCommand;
 import me.nexuswarp.command.NexusWarpCommand;
+import me.nexuswarp.command.PlaytimeCommand;
 import me.nexuswarp.command.ReplyCommand;
+import me.nexuswarp.command.SeenCommand;
 import me.nexuswarp.command.SetHubCommand;
 import me.nexuswarp.command.SetSpawnCommand;
 import me.nexuswarp.command.SpawnCommand;
@@ -128,6 +130,10 @@ public class NexusWarpPlugin extends JavaPlugin {
         // Messaging commands
         registerCommand("msg", new MsgCommand(this));
         registerCommand("reply", new ReplyCommand(this));
+
+        // Player info commands
+        registerCommand("playtime", new PlaytimeCommand(this));
+        registerCommand("seen", new SeenCommand(this));
 
         // Economy commands
         registerCommand("eco", new EcoCommand(this));

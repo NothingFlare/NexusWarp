@@ -32,6 +32,7 @@ public class PlayerEventListener implements Listener {
         plugin.getTpaManager().handlePlayerQuit(player);
         plugin.getMessageManager().removePlayer(player.getUniqueId());
         plugin.getEconomyManager().clearPendingPayConfirm(player.getUniqueId());
+        handlePlayerSessionEnd(player);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -40,6 +41,20 @@ public class PlayerEventListener implements Listener {
         plugin.getTpaManager().handlePlayerQuit(player);
         plugin.getMessageManager().removePlayer(player.getUniqueId());
         plugin.getEconomyManager().clearPendingPayConfirm(player.getUniqueId());
+        handlePlayerSessionEnd(player);
+    }
+
+    private void handlePlayerSessionEnd(Player player) {
+        me.nexuswarp.economy.UserAccount account = plugin.getEconomyManager().getAccount(player.getUniqueId());
+        if (account != null) {
+            account.setLastLogout(System.currentTimeMillis());
+            Location loc = player.getLocation();
+            if (loc.getWorld() != null) {
+                String locStr = loc.getWorld().getName() + ", " + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ();
+                account.setLastLocation(locStr);
+            }
+            plugin.getEconomyManager().saveAccountAsync(account);
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

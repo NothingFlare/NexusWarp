@@ -5,7 +5,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Represents a cached user economy account.
+ * Represents a cached user account (economy, session, and player info).
  */
 public class UserAccount {
 
@@ -16,6 +16,13 @@ public class UserAccount {
     private volatile String npcName;
     private volatile boolean acceptingPay = true;
     private volatile boolean promptPayConfirm = false;
+
+    // Session and history tracking for /seen
+    private volatile long lastLogin = 0L;
+    private volatile long lastLogout = 0L;
+    private volatile String lastIp = null;
+    private volatile String lastLocation = null;
+
     private volatile boolean dirty = false;
 
     public UserAccount(UUID uuid, String lastAccountName, BigDecimal balance) {
@@ -79,6 +86,42 @@ public class UserAccount {
 
     public void setPromptPayConfirm(boolean promptPayConfirm) {
         this.promptPayConfirm = promptPayConfirm;
+        this.dirty = true;
+    }
+
+    public long getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(long lastLogin) {
+        this.lastLogin = lastLogin;
+        this.dirty = true;
+    }
+
+    public long getLastLogout() {
+        return lastLogout;
+    }
+
+    public void setLastLogout(long lastLogout) {
+        this.lastLogout = lastLogout;
+        this.dirty = true;
+    }
+
+    public String getLastIp() {
+        return lastIp;
+    }
+
+    public void setLastIp(String lastIp) {
+        this.lastIp = lastIp;
+        this.dirty = true;
+    }
+
+    public String getLastLocation() {
+        return lastLocation;
+    }
+
+    public void setLastLocation(String lastLocation) {
+        this.lastLocation = lastLocation;
         this.dirty = true;
     }
 
