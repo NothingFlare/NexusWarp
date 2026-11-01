@@ -88,6 +88,11 @@ commands:
     description: Проверить последний онлайн игрока / Check player last seen information
     usage: /seen <player>
     permission: nexuswarp.seen
+  list:
+    description: Список игроков в сети / List all online players
+    usage: /list [group]
+    aliases: [online, playerlist, plist, who]
+    permission: nexuswarp.list
   spawn:
     description: Телепортация на спавн / Teleport to spawn location
     usage: /spawn [player]
@@ -197,6 +202,18 @@ permissions:
   nexuswarp.seen.banreason:
     description: Доступ к просмотру причины бана в /seen / Access to see ban reason in /seen
     default: true
+  nexuswarp.list:
+    description: Доступ к списку игроков / Access to /list command
+    default: true
+  essentials.list:
+    description: Доступ к списку игроков (Essentials bridge) / Access to /list command
+    default: true
+  nexuswarp.list.hidden:
+    description: Просмотр скрытых игроков в /list / Access to view hidden players in /list
+    default: op
+  essentials.list.hidden:
+    description: Просмотр скрытых игроков в /list (Essentials bridge) / Access to view hidden players in /list
+    default: op
   nexuswarp.spawn:
     description: Доступ к команде /spawn / Access to /spawn command
     default: true

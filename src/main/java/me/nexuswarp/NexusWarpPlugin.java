@@ -1,6 +1,7 @@
 package me.nexuswarp;
 
 import me.nexuswarp.command.HubCommand;
+import me.nexuswarp.command.ListCommand;
 import me.nexuswarp.command.MsgCommand;
 import me.nexuswarp.command.NexusWarpCommand;
 import me.nexuswarp.command.PlaytimeCommand;
@@ -134,6 +135,7 @@ public class NexusWarpPlugin extends JavaPlugin {
         // Player info commands
         registerCommand("playtime", new PlaytimeCommand(this));
         registerCommand("seen", new SeenCommand(this));
+        registerCommand("list", new ListCommand(this));
 
         // Economy commands
         registerCommand("eco", new EcoCommand(this));
