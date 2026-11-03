@@ -92,7 +92,7 @@ public class SpawnCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (!player.hasPermission("nexuswarp.spawn")) {
+        if (!player.hasPermission("nexuswarp.spawn") && !player.hasPermission("essentials.spawn")) {
             player.sendMessage(plugin.getLanguageManager().getMessage("no_permission"));
             return true;
         }
@@ -104,7 +104,7 @@ public class SpawnCommand implements CommandExecutor, TabCompleter {
             }
         }
 
-        plugin.getTpaManager().teleportWithWarmup(player, destLoc, "spawn_teleport_success");
+        plugin.getTpaManager().teleportWithWarmup(player, destLoc, plugin.getConfigManager().getSpawnDelay(), "spawn_teleport_success");
         return true;
     }
 

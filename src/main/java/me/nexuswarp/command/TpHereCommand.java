@@ -30,7 +30,7 @@ public class TpHereCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (!playerSender.hasPermission("nexuswarp.tphere")) {
+        if (!playerSender.hasPermission("nexuswarp.tphere") && !playerSender.hasPermission("essentials.tphere")) {
             playerSender.sendMessage(plugin.getLanguageManager().getMessage("no_permission"));
             return true;
         }
@@ -76,7 +76,7 @@ public class TpHereCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (!sender.hasPermission("nexuswarp.tphere")) {
+        if (!sender.hasPermission("nexuswarp.tphere") && !sender.hasPermission("essentials.tphere")) {
             return Collections.emptyList();
         }
 
@@ -84,7 +84,11 @@ public class TpHereCommand implements CommandExecutor, TabCompleter {
             String query = args[0].toLowerCase();
             List<String> list = new ArrayList<>();
             for (Player p : Bukkit.getOnlinePlayers()) {
-                if (sender instanceof Player ps && ps.getUniqueId().equals(p.getUniqueId())) continue;
+                if (sender instanceof Player ps && !ps.canSee(p)
+                        && !sender.hasPermission("nexuswarp.list.hidden")
+                        && !sender.hasPermission("essentials.list.hidden")) {
+                    continue;
+                }
                 if (p.getName().toLowerCase().startsWith(query)) {
                     list.add(p.getName());
                 }

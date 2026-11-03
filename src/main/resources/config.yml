@@ -66,6 +66,9 @@ economy:
 # By default disabled / По умолчанию выключено
 spawn:
   enabled: false
+  # Warmup delay before teleporting in seconds (0 = instant teleport)
+  # Время ожидания перед телепортацией в секундах (0 = мгновенно)
+  delay: 0
   world: "world"
   x: 0.5
   y: 64.0
@@ -77,6 +80,9 @@ spawn:
 # By default disabled / По умолчанию выключено
 hub:
   enabled: false
+  # Warmup delay before teleporting in seconds (0 = instant teleport)
+  # Время ожидания перед телепортацией в секундах (0 = мгновенно)
+  delay: 0
   world: "world"
   x: 0.5
   y: 64.0

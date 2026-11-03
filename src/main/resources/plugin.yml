@@ -31,7 +31,6 @@ commands:
     description: Телепортировать игрока к себе / Teleport a player to you
     usage: /tphere <player>
     aliases: [s, tph]
-    permission: nexuswarp.tphere
   msg:
     description: Отправить личное сообщение / Send a private message
     usage: /msg <player> <message>
@@ -126,16 +125,22 @@ permissions:
     default: true
   nexuswarp.tp:
     description: Доступ к прямой телепортации / Access to direct teleportation
-    default: false
+    default: op
+  essentials.tp:
+    description: Доступ к прямой телепортации (Essentials bridge) / Access to direct teleportation
+    default: op
   nexuswarp.tphere:
     description: Доступ к телепортации игрока к себе / Teleport player to you
-    default: false
+    default: op
+  essentials.tphere:
+    description: Доступ к телепортации игрока к себе (Essentials bridge) / Teleport player to you
+    default: op
   nexuswarp.tp.others:
     description: Доступ к телепортации других игроков / Access to teleport other players
-    default: false
+    default: op
   nexuswarp.tp.position:
     description: Доступ к телепортации по координатам / Access to teleport to coordinates
-    default: false
+    default: op
   nexuswarp.eco:
     description: Доступ к управлению экономикой / Access to economy management command
     default: op
@@ -217,11 +222,17 @@ permissions:
   nexuswarp.spawn:
     description: Доступ к команде /spawn / Access to /spawn command
     default: true
+  essentials.spawn:
+    description: Доступ к команде /spawn (Essentials bridge) / Access to /spawn command
+    default: true
   nexuswarp.spawn.others:
     description: Телепортация других игроков на спавн / Teleport other players to spawn
     default: op
   nexuswarp.hub:
     description: Доступ к команде /hub / Access to /hub command
+    default: true
+  essentials.hub:
+    description: Доступ к команде /hub (Essentials bridge) / Access to /hub command
     default: true
   nexuswarp.hub.others:
     description: Телепортация других игроков в хаб / Teleport other players to hub

@@ -92,7 +92,7 @@ public class HubCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (!player.hasPermission("nexuswarp.hub")) {
+        if (!player.hasPermission("nexuswarp.hub") && !player.hasPermission("essentials.hub")) {
             player.sendMessage(plugin.getLanguageManager().getMessage("no_permission"));
             return true;
         }
@@ -104,7 +104,7 @@ public class HubCommand implements CommandExecutor, TabCompleter {
             }
         }
 
-        plugin.getTpaManager().teleportWithWarmup(player, destLoc, "hub_teleport_success");
+        plugin.getTpaManager().teleportWithWarmup(player, destLoc, plugin.getConfigManager().getHubDelay(), "hub_teleport_success");
         return true;
     }
 

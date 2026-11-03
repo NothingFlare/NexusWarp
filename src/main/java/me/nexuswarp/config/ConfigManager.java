@@ -30,6 +30,7 @@ public class ConfigManager {
     private boolean preventSuffocation;
 
     private boolean spawnEnabled;
+    private int spawnDelay;
     private String spawnWorld;
     private double spawnX;
     private double spawnY;
@@ -38,6 +39,7 @@ public class ConfigManager {
     private float spawnPitch;
 
     private boolean hubEnabled;
+    private int hubDelay;
     private String hubWorld;
     private double hubX;
     private double hubY;
@@ -80,6 +82,7 @@ public class ConfigManager {
 
         // Spawn
         this.spawnEnabled = config.getBoolean("spawn.enabled", false);
+        this.spawnDelay = Math.max(0, config.getInt("spawn.delay", 0));
         this.spawnWorld = config.getString("spawn.world", "world");
         this.spawnX = config.getDouble("spawn.x", 0.5);
         this.spawnY = config.getDouble("spawn.y", 64.0);
@@ -89,6 +92,7 @@ public class ConfigManager {
 
         // Hub
         this.hubEnabled = config.getBoolean("hub.enabled", false);
+        this.hubDelay = Math.max(0, config.getInt("hub.delay", 0));
         this.hubWorld = config.getString("hub.world", "world");
         this.hubX = config.getDouble("hub.x", 0.5);
         this.hubY = config.getDouble("hub.y", 64.0);
@@ -165,6 +169,10 @@ public class ConfigManager {
         return spawnEnabled;
     }
 
+    public int getSpawnDelay() {
+        return spawnDelay;
+    }
+
     public String getSpawnWorldName() {
         return spawnWorld;
     }
@@ -198,6 +206,10 @@ public class ConfigManager {
 
     public boolean isHubEnabled() {
         return hubEnabled;
+    }
+
+    public int getHubDelay() {
+        return hubDelay;
     }
 
     public String getHubWorldName() {

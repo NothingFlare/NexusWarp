@@ -187,9 +187,13 @@ public class TpaManager {
     }
 
     public void teleportWithWarmup(Player player, Location targetLocation, String successMessageKey) {
+        teleportWithWarmup(player, targetLocation, plugin.getConfigManager().getTeleportDelay(), successMessageKey);
+    }
+
+    public void teleportWithWarmup(Player player, Location targetLocation, int customDelay, String successMessageKey) {
         if (player == null || !player.isOnline()) return;
 
-        int delay = plugin.getConfigManager().getTeleportDelay();
+        int delay = Math.max(0, customDelay);
         if (delay > 0 && !player.hasPermission("nexuswarp.bypass.delay")) {
             cancelWarmup(player.getUniqueId(), false);
 

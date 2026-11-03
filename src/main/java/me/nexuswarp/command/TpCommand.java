@@ -25,7 +25,7 @@ public class TpCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!sender.hasPermission("nexuswarp.tp")) {
+        if (!sender.hasPermission("nexuswarp.tp") && !sender.hasPermission("essentials.tp")) {
             sender.sendMessage(plugin.getLanguageManager().getMessage("no_permission"));
             return true;
         }
@@ -199,7 +199,7 @@ public class TpCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (!sender.hasPermission("nexuswarp.tp")) {
+        if (!sender.hasPermission("nexuswarp.tp") && !sender.hasPermission("essentials.tp")) {
             return Collections.emptyList();
         }
 
