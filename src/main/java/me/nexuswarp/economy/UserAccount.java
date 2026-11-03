@@ -16,6 +16,7 @@ public class UserAccount {
     private volatile String npcName;
     private volatile boolean acceptingPay = true;
     private volatile boolean promptPayConfirm = false;
+    private volatile boolean baltopExempt = false;
 
     // Session and history tracking for /seen
     private volatile long lastLogin = 0L;
@@ -86,6 +87,15 @@ public class UserAccount {
 
     public void setPromptPayConfirm(boolean promptPayConfirm) {
         this.promptPayConfirm = promptPayConfirm;
+        this.dirty = true;
+    }
+
+    public boolean isBaltopExempt() {
+        return baltopExempt;
+    }
+
+    public void setBaltopExempt(boolean baltopExempt) {
+        this.baltopExempt = baltopExempt;
         this.dirty = true;
     }
 

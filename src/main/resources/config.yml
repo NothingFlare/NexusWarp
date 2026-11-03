@@ -62,6 +62,10 @@ economy:
   # Показывать ли NPC аккаунты в топе богачей
   baltop-show-npcs: false
 
+  # List of player names excluded from /baltop
+  # Список ников игроков, исключенных из топа богачей (/baltop)
+  baltop-excluded-players: []
+
 # Spawn command configuration / Настройка точки спавна (/spawn)
 # By default disabled / По умолчанию выключено
 spawn:

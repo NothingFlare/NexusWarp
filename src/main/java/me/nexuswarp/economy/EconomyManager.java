@@ -7,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.PermissionAttachmentInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,6 +45,7 @@ public class EconomyManager {
     private BigDecimal baltopMinBalance = BigDecimal.ZERO;
     private int baltopEntryLimit = -1;
     private boolean baltopShowNpcs = false;
+    private volatile Set<String> baltopExcludedPlayers = Collections.emptySet();
 
     // Smart incremental baltop data structures
     private final Object baltopLock = new Object();
@@ -127,6 +129,15 @@ public class EconomyManager {
         this.baltopEntryLimit = plugin.getConfig().getInt("economy.baltop-entry-limit", -1);
         this.baltopShowNpcs = plugin.getConfig().getBoolean("economy.baltop-show-npcs", false);
 
+        List<String> excludedList = plugin.getConfig().getStringList("economy.baltop-excluded-players");
+        Set<String> excludedSet = new HashSet<>();
+        for (String s : excludedList) {
+            if (s != null && !s.trim().isEmpty()) {
+                excludedSet.add(s.trim().toLowerCase(Locale.ROOT));
+            }
+        }
+        this.baltopExcludedPlayers = Collections.unmodifiableSet(excludedSet);
+
         loadAllDataAsync();
     }
 
@@ -192,6 +203,7 @@ public class EconomyManager {
         account.setNpcName(yaml.getString("npc-name", null));
         account.setAcceptingPay(yaml.getBoolean("accepting-pay", true));
         account.setPromptPayConfirm(yaml.getBoolean("confirm-pay", false));
+        account.setBaltopExempt(yaml.getBoolean("baltop-exempt", false));
         account.setLastLogin(yaml.getLong("last-login", 0L));
         account.setLastLogout(yaml.getLong("last-logout", 0L));
         account.setLastIp(yaml.getString("last-ip", null));
@@ -253,6 +265,8 @@ public class EconomyManager {
             if (player.getAddress() != null && player.getAddress().getAddress() != null) {
                 account.setLastIp(player.getAddress().getAddress().getHostAddress());
             }
+            boolean excluded = isExcludedFromBaltop(player);
+            account.setBaltopExempt(excluded);
             saveAccountAsync(account);
             // Ensure player is reflected in baltop ranking
             updateBaltopForUser(player.getUniqueId(), player.getName(), account.getBalance(), account.getBalance());
@@ -276,6 +290,7 @@ public class EconomyManager {
         }
         yaml.set("accepting-pay", account.isAcceptingPay());
         yaml.set("confirm-pay", account.isPromptPayConfirm());
+        yaml.set("baltop-exempt", account.isBaltopExempt());
         if (account.getLastLogin() > 0) yaml.set("last-login", account.getLastLogin());
         if (account.getLastLogout() > 0) yaml.set("last-logout", account.getLastLogout());
         if (account.getLastIp() != null) yaml.set("last-ip", account.getLastIp());
@@ -640,6 +655,19 @@ public class EconomyManager {
      */
     public void calculateBaltop() {
         synchronized (baltopLock) {
+            if (accounts.isEmpty() && userdataFolder.exists()) {
+                File[] files = userdataFolder.listFiles((dir, name) -> name.endsWith(".yml"));
+                if (files != null) {
+                    for (File file : files) {
+                        try {
+                            String fileName = file.getName();
+                            UUID uuid = UUID.fromString(fileName.substring(0, fileName.length() - 4));
+                            loadUserFile(uuid, file);
+                        } catch (Throwable ignored) {}
+                    }
+                }
+            }
+
             baltopEntryMap.clear();
             baltopSortedList.clear();
             BigDecimal total = BigDecimal.ZERO;
@@ -761,12 +789,17 @@ public class EconomyManager {
 
     public boolean isExcludedFromBaltop(Player player) {
         if (player == null) return false;
-        // Operators are never excluded by default; only exclude if the node is explicitly set on them
-        if (player.isOp()) {
-            return (player.isPermissionSet("nexuswarp.balancetop.exclude") && player.hasPermission("nexuswarp.balancetop.exclude"))
-                    || (player.isPermissionSet("essentials.balancetop.exclude") && player.hasPermission("essentials.balancetop.exclude"));
-        }
-        return player.hasPermission("nexuswarp.balancetop.exclude") || player.hasPermission("essentials.balancetop.exclude");
+        try {
+            // Check for explicit assignment of exclude permission (avoids wildcard '*' and default OP inheritance)
+            for (PermissionAttachmentInfo pai : player.getEffectivePermissions()) {
+                if (pai == null || pai.getPermission() == null) continue;
+                String perm = pai.getPermission();
+                if (perm.equalsIgnoreCase("nexuswarp.balancetop.exclude") || perm.equalsIgnoreCase("essentials.balancetop.exclude")) {
+                    return pai.getValue();
+                }
+            }
+        } catch (Throwable ignored) {}
+        return false;
     }
 
     public boolean qualifiesForBaltop(UserAccount account, BigDecimal balance) {
@@ -774,9 +807,18 @@ public class EconomyManager {
         if (!baltopShowNpcs && account.isNpc()) return false;
         if (!baltopShowZero && balance.signum() <= 0) return false;
         if (balance.compareTo(baltopMinBalance) < 0) return false;
+        if (account.getLastAccountName() != null && baltopExcludedPlayers.contains(account.getLastAccountName().toLowerCase(Locale.ROOT))) {
+            return false;
+        }
 
         Player player = Bukkit.getPlayer(account.getUuid());
-        if (player != null && isExcludedFromBaltop(player)) {
+        if (player != null) {
+            boolean excluded = isExcludedFromBaltop(player);
+            account.setBaltopExempt(excluded);
+            if (excluded) {
+                return false;
+            }
+        } else if (account.isBaltopExempt()) {
             return false;
         }
         return true;
@@ -785,7 +827,7 @@ public class EconomyManager {
     public List<BalanceTopEntry> getBaltopOnline() {
         List<BalanceTopEntry> list = new ArrayList<>();
         for (Player p : Bukkit.getOnlinePlayers()) {
-            if (isExcludedFromBaltop(p)) {
+            if (baltopExcludedPlayers.contains(p.getName().toLowerCase(Locale.ROOT)) || isExcludedFromBaltop(p)) {
                 continue;
             }
             list.add(new BalanceTopEntry(p.getUniqueId(), p.getName(), getBalance(p.getUniqueId())));
