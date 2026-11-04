@@ -1,6 +1,8 @@
 package me.nexuswarp.listener;
 
 import me.nexuswarp.NexusWarpPlugin;
+import me.nexuswarp.economy.UserAccount;
+import me.nexuswarp.util.DateUtil;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -8,6 +10,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -24,6 +27,25 @@ public class PlayerEventListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onJoin(PlayerJoinEvent event) {
         plugin.getEconomyManager().onPlayerJoin(event.getPlayer());
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onChat(AsyncPlayerChatEvent event) {
+        Player player = event.getPlayer();
+        UserAccount account = plugin.getEconomyManager().getAccount(player.getUniqueId());
+        if (account != null && account.isMuted()) {
+            event.setCancelled(true);
+            String lang = plugin.getLanguageManager().getCurrentLanguage();
+            long until = account.getMutedUntil();
+            String reason = account.getMuteReason() != null ? account.getMuteReason() : plugin.getLanguageManager().getMessage("mute_no_reason");
+            if (until > 0L) {
+                long remaining = Math.max(0L, until - System.currentTimeMillis());
+                String timeStr = DateUtil.formatDuration(remaining, lang);
+                player.sendMessage(plugin.getLanguageManager().getMessage("mute_chat_blocked_temp", "time", timeStr, "reason", reason));
+            } else {
+                player.sendMessage(plugin.getLanguageManager().getMessage("mute_chat_blocked_permanent", "reason", reason));
+            }
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

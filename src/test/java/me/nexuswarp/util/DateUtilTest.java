@@ -42,4 +42,28 @@ public class DateUtilTest {
         assertNotNull(DateUtil.formatDateTime(System.currentTimeMillis(), "ru"));
         assertNotNull(DateUtil.formatDateTime(System.currentTimeMillis(), "en"));
     }
+
+    @Test
+    public void testParseDurationAndDateDiff() {
+        long d10s = DateUtil.parseDuration("10s");
+        assertTrue(d10s >= 9000L && d10s <= 11000L);
+
+        long d5m = DateUtil.parseDuration("5m");
+        assertTrue(d5m >= 299000L && d5m <= 301000L);
+
+        long d2h = DateUtil.parseDuration("2h");
+        assertTrue(d2h >= 7190000L && d2h <= 7210000L);
+
+        long d1d = DateUtil.parseDuration("1d");
+        assertTrue(d1d >= 86390000L && d1d <= 86410000L);
+
+        long futureEpoch = DateUtil.parseDateDiff("1h", true);
+        assertTrue(futureEpoch > System.currentTimeMillis());
+
+        long pastEpoch = DateUtil.parseDateDiff("1h", false);
+        assertTrue(pastEpoch < System.currentTimeMillis());
+
+        assertThrows(IllegalArgumentException.class, () -> DateUtil.parseDuration("invalid"));
+        assertThrows(IllegalArgumentException.class, () -> DateUtil.parseDuration(""));
+    }
 }

@@ -18,6 +18,11 @@ public class UserAccount {
     private volatile boolean promptPayConfirm = false;
     private volatile boolean baltopExempt = false;
 
+    // Mute tracking
+    private volatile boolean muted = false;
+    private volatile long mutedUntil = 0L;
+    private volatile String muteReason = null;
+
     // Session and history tracking for /seen
     private volatile long lastLogin = 0L;
     private volatile long lastLogout = 0L;
@@ -96,6 +101,44 @@ public class UserAccount {
 
     public void setBaltopExempt(boolean baltopExempt) {
         this.baltopExempt = baltopExempt;
+        this.dirty = true;
+    }
+
+    public boolean isMuted() {
+        if (!muted) return false;
+        if (mutedUntil > 0 && System.currentTimeMillis() >= mutedUntil) {
+            this.muted = false;
+            this.mutedUntil = 0L;
+            this.muteReason = null;
+            this.dirty = true;
+            return false;
+        }
+        return true;
+    }
+
+    public void setMuted(boolean muted) {
+        this.muted = muted;
+        this.dirty = true;
+    }
+
+    public long getMutedUntil() {
+        return mutedUntil;
+    }
+
+    public void setMutedUntil(long mutedUntil) {
+        this.mutedUntil = mutedUntil;
+        if (mutedUntil > System.currentTimeMillis()) {
+            this.muted = true;
+        }
+        this.dirty = true;
+    }
+
+    public String getMuteReason() {
+        return muteReason;
+    }
+
+    public void setMuteReason(String muteReason) {
+        this.muteReason = muteReason;
         this.dirty = true;
     }
 

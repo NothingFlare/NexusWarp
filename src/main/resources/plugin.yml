@@ -110,6 +110,35 @@ commands:
     usage: /sethub
     aliases: [setlobby]
     permission: nexuswarp.sethub
+  fly:
+    description: Переключить режим полёта / Toggle flight mode
+    usage: /fly [player] [on|off]
+    permission: nexuswarp.fly
+  heal:
+    description: Полностью исцелить и утолить голод / Heal and feed player
+    usage: /heal [player|*]
+    permission: nexuswarp.heal
+  kill:
+    description: Убить игрока / Kill a player
+    usage: /kill <player>
+    permission: nexuswarp.kill
+  mute:
+    description: Заглушить игрока / Mute a player
+    usage: /mute <player> [duration] [reason]
+    permission: nexuswarp.mute
+  unmute:
+    description: Снять заглушку с игрока / Unmute a player
+    usage: /unmute <player>
+    permission: nexuswarp.mute
+  tempban:
+    description: Временно заблокировать игрока / Temporarily ban a player
+    usage: /tempban <player> <time> [reason]
+    permission: nexuswarp.tempban
+  uptime:
+    description: Статистика работы сервера / Check server uptime and performance
+    usage: /uptime
+    aliases: [lag, gc, mem]
+    permission: nexuswarp.uptime
   nexuswarp:
     description: Управление плагином NexusWarp / NexusWarp management command
     usage: /nexuswarp [reload]
@@ -251,4 +280,82 @@ permissions:
     default: op
   nexuswarp.admin:
     description: Доступ к административным командам / Access to admin commands
+    default: op
+  nexuswarp.fly:
+    description: Доступ к полету (/fly) / Access to /fly command
+    default: op
+  essentials.fly:
+    description: Доступ к полету (Essentials bridge) / Access to /fly command
+    default: op
+  nexuswarp.fly.others:
+    description: Включение полета другим игрокам / Access to /fly for other players
+    default: op
+  essentials.fly.others:
+    description: Включение полета другим игрокам (Essentials bridge) / Access to /fly for other players
+    default: op
+  nexuswarp.heal:
+    description: Доступ к исцелению (/heal) / Access to /heal command
+    default: op
+  essentials.heal:
+    description: Доступ к исцелению (Essentials bridge) / Access to /heal command
+    default: op
+  nexuswarp.heal.others:
+    description: Исцеление других игроков (/heal <player>) / Access to heal other players
+    default: op
+  essentials.heal.others:
+    description: Исцеление других игроков (Essentials bridge) / Access to heal other players
+    default: op
+  nexuswarp.heal.cooldown.bypass:
+    description: Обход задержки на использование /heal / Bypass heal cooldown
+    default: op
+  essentials.heal.cooldown.bypass:
+    description: Обход задержки на использование /heal (Essentials bridge) / Bypass heal cooldown
+    default: op
+  nexuswarp.kill:
+    description: Доступ к убийству игроков (/kill) / Access to /kill command
+    default: op
+  essentials.kill:
+    description: Доступ к убийству игроков (Essentials bridge) / Access to /kill command
+    default: op
+  nexuswarp.kill.exempt:
+    description: Иммунитет к команде /kill / Immune to /kill command
+    default: false
+  essentials.kill.exempt:
+    description: Иммунитет к команде /kill (Essentials bridge) / Immune to /kill command
+    default: false
+  nexuswarp.kill.force:
+    description: Убийство защищенных игроков (/kill) / Force kill exempt players
+    default: op
+  essentials.kill.force:
+    description: Убийство защищенных игроков (Essentials bridge) / Force kill exempt players
+    default: op
+  nexuswarp.mute:
+    description: Доступ к заглушению игроков (/mute, /unmute) / Access to /mute and /unmute
+    default: op
+  essentials.mute:
+    description: Доступ к заглушению игроков (Essentials bridge) / Access to /mute and /unmute
+    default: op
+  nexuswarp.mute.exempt:
+    description: Иммунитет к заглушению (/mute) / Immune to /mute command
+    default: false
+  essentials.mute.exempt:
+    description: Иммунитет к заглушению (Essentials bridge) / Immune to /mute command
+    default: false
+  nexuswarp.tempban:
+    description: Доступ к временному бану (/tempban) / Access to /tempban command
+    default: op
+  essentials.tempban:
+    description: Доступ к временному бану (Essentials bridge) / Access to /tempban command
+    default: op
+  nexuswarp.tempban.exempt:
+    description: Иммунитет к временному бану / Immune to /tempban command
+    default: false
+  essentials.tempban.exempt:
+    description: Иммунитет к временному бану (Essentials bridge) / Immune to /tempban command
+    default: false
+  nexuswarp.uptime:
+    description: Доступ к статистике сервера (/uptime) / Access to /uptime command
+    default: op
+  essentials.uptime:
+    description: Доступ к статистике сервера (Essentials bridge) / Access to /uptime command
     default: op

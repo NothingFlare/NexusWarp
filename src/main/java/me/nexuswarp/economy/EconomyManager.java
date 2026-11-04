@@ -204,6 +204,9 @@ public class EconomyManager {
         account.setAcceptingPay(yaml.getBoolean("accepting-pay", true));
         account.setPromptPayConfirm(yaml.getBoolean("confirm-pay", false));
         account.setBaltopExempt(yaml.getBoolean("baltop-exempt", false));
+        account.setMuted(yaml.getBoolean("muted", false));
+        account.setMutedUntil(yaml.getLong("muted-until", 0L));
+        account.setMuteReason(yaml.getString("mute-reason", null));
         account.setLastLogin(yaml.getLong("last-login", 0L));
         account.setLastLogout(yaml.getLong("last-logout", 0L));
         account.setLastIp(yaml.getString("last-ip", null));
@@ -291,6 +294,13 @@ public class EconomyManager {
         yaml.set("accepting-pay", account.isAcceptingPay());
         yaml.set("confirm-pay", account.isPromptPayConfirm());
         yaml.set("baltop-exempt", account.isBaltopExempt());
+        yaml.set("muted", account.isMuted());
+        yaml.set("muted-until", account.getMutedUntil());
+        if (account.getMuteReason() != null) {
+            yaml.set("mute-reason", account.getMuteReason());
+        } else {
+            yaml.set("mute-reason", null);
+        }
         if (account.getLastLogin() > 0) yaml.set("last-login", account.getLastLogin());
         if (account.getLastLogout() > 0) yaml.set("last-logout", account.getLastLogout());
         if (account.getLastIp() != null) yaml.set("last-ip", account.getLastIp());

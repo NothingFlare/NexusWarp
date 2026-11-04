@@ -1,8 +1,12 @@
 package me.nexuswarp;
 
+import me.nexuswarp.command.FlyCommand;
+import me.nexuswarp.command.HealCommand;
 import me.nexuswarp.command.HubCommand;
+import me.nexuswarp.command.KillCommand;
 import me.nexuswarp.command.ListCommand;
 import me.nexuswarp.command.MsgCommand;
+import me.nexuswarp.command.MuteCommand;
 import me.nexuswarp.command.NexusWarpCommand;
 import me.nexuswarp.command.PlaytimeCommand;
 import me.nexuswarp.command.ReplyCommand;
@@ -10,11 +14,13 @@ import me.nexuswarp.command.SeenCommand;
 import me.nexuswarp.command.SetHubCommand;
 import me.nexuswarp.command.SetSpawnCommand;
 import me.nexuswarp.command.SpawnCommand;
+import me.nexuswarp.command.TempBanCommand;
 import me.nexuswarp.command.TpAcceptCommand;
 import me.nexuswarp.command.TpCancelCommand;
 import me.nexuswarp.command.TpCommand;
 import me.nexuswarp.command.TpHereCommand;
 import me.nexuswarp.command.TpaCommand;
+import me.nexuswarp.command.UptimeCommand;
 import me.nexuswarp.command.eco.BalanceCommand;
 import me.nexuswarp.command.eco.BalanceTopCommand;
 import me.nexuswarp.command.eco.EcoCommand;
@@ -158,6 +164,16 @@ public class NexusWarpPlugin extends JavaPlugin {
         registerCommand("hub", new HubCommand(this));
         registerCommand("setspawn", new SetSpawnCommand(this));
         registerCommand("sethub", new SetHubCommand(this));
+
+        // Essentials core commands
+        registerCommand("fly", new FlyCommand(this));
+        registerCommand("heal", new HealCommand(this));
+        registerCommand("kill", new KillCommand(this));
+        MuteCommand muteCommand = new MuteCommand(this);
+        registerCommand("mute", muteCommand);
+        registerCommand("unmute", muteCommand);
+        registerCommand("tempban", new TempBanCommand(this));
+        registerCommand("uptime", new UptimeCommand(this));
 
         // Admin command
         registerCommand("nexuswarp", new NexusWarpCommand(this));

@@ -1,6 +1,8 @@
 package me.nexuswarp.command;
 
 import me.nexuswarp.NexusWarpPlugin;
+import me.nexuswarp.economy.UserAccount;
+import me.nexuswarp.util.DateUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -22,9 +24,26 @@ public class ReplyCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!sender.hasPermission("nexuswarp.msg")) {
+        if (!sender.hasPermission("nexuswarp.msg") && !sender.hasPermission("essentials.msg")) {
             sender.sendMessage(plugin.getLanguageManager().getMessage("no_permission"));
             return true;
+        }
+
+        if (sender instanceof Player player) {
+            UserAccount account = plugin.getEconomyManager().getAccount(player.getUniqueId());
+            if (account != null && account.isMuted()) {
+                String lang = plugin.getLanguageManager().getCurrentLanguage();
+                long until = account.getMutedUntil();
+                String reason = account.getMuteReason() != null ? account.getMuteReason() : plugin.getLanguageManager().getMessage("mute_no_reason");
+                if (until > 0L) {
+                    long remaining = Math.max(0L, until - System.currentTimeMillis());
+                    String timeStr = DateUtil.formatDuration(remaining, lang);
+                    sender.sendMessage(plugin.getLanguageManager().getMessage("mute_chat_blocked_temp", "time", timeStr, "reason", reason));
+                } else {
+                    sender.sendMessage(plugin.getLanguageManager().getMessage("mute_chat_blocked_permanent", "reason", reason));
+                }
+                return true;
+            }
         }
 
         if (args.length < 1) {

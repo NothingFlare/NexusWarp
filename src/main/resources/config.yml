@@ -147,3 +147,7 @@ safe-teleport:
   # Prevent teleporting into the void
   # Запретить телепортацию в пустоту
   prevent-void: true
+
+# Cooldown in seconds before /heal command can be used again (0 = no cooldown)
+# Задержка в секундах перед повторным использованием /heal (0 = без задержки)
+heal-cooldown: 0

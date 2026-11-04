@@ -34,5 +34,23 @@ public class UserAccountTest {
         account.setNpcName("ShopKeeper");
         assertTrue(account.isNpc());
         assertEquals("ShopKeeper", account.getNpcName());
+
+        assertFalse(account.isBaltopExempt());
+        account.setBaltopExempt(true);
+        assertTrue(account.isBaltopExempt());
+
+        assertFalse(account.isMuted());
+        account.setMuted(true);
+        assertTrue(account.isMuted());
+
+        // Temporary mute in the past
+        account.setMutedUntil(System.currentTimeMillis() - 1000L);
+        assertFalse(account.isMuted()); // Auto-expires
+
+        // Temporary mute in the future
+        account.setMutedUntil(System.currentTimeMillis() + 60000L);
+        account.setMuteReason("Spam");
+        assertTrue(account.isMuted());
+        assertEquals("Spam", account.getMuteReason());
     }
 }
