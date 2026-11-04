@@ -122,6 +122,19 @@ commands:
     description: Убить игрока / Kill a player
     usage: /kill <player>
     permission: nexuswarp.kill
+  killall:
+    description: Удалить сущности в мире (дроп, мобы, стрелы и т.д.) / Remove entities in world
+    usage: /killall <drops|mobs|monsters|animals|xp|arrows|boats|all> [радиус|мир]
+    aliases: [remove, butcher, mobkill]
+    permission: nexuswarp.killall
+  remove:
+    description: Удалить сущности в мире / Remove entities in world
+    usage: /remove <drops|mobs|monsters|animals|xp|arrows|boats|all> [радиус|мир]
+    permission: nexuswarp.killall
+  butcher:
+    description: Удалить сущности в мире / Remove entities in world
+    usage: /butcher <drops|mobs|monsters|animals|xp|arrows|boats|all> [радиус|мир]
+    permission: nexuswarp.killall
   mute:
     description: Заглушить игрока / Mute a player
     usage: /mute <player> [duration] [reason]
@@ -328,6 +341,18 @@ permissions:
     default: op
   essentials.kill.force:
     description: Убийство защищенных игроков (Essentials bridge) / Force kill exempt players
+    default: op
+  nexuswarp.killall:
+    description: Доступ к удалению сущностей (/killall, /remove) / Access to /killall command
+    default: op
+  essentials.killall:
+    description: Доступ к удалению сущностей (Essentials bridge) / Access to /killall command
+    default: op
+  nexuswarp.remove:
+    description: Доступ к удалению сущностей (/remove) / Access to /remove command
+    default: op
+  essentials.remove:
+    description: Доступ к удалению сущностей (Essentials bridge) / Access to /remove command
     default: op
   nexuswarp.mute:
     description: Доступ к заглушению игроков (/mute, /unmute) / Access to /mute and /unmute

@@ -175,3 +175,8 @@ uptime_time: "&7Server uptime: &a{time}"
 uptime_tps: "&7TPS (1m, 5m, 15m): {tps_1m}&7, {tps_5m}&7, {tps_15m}"
 uptime_memory: "&7Memory: &a{used} MB &7/ &e{total} MB &7(Max: &e{max} MB&7, free: &b{free} MB&7)"
 uptime_world_entry: "&7World &f\"{world}\"&7: chunks &e{chunks}&7, entities &e{entities}"
+
+usage_killall: "&cUsage: &e/killall <drops|mobs|monsters|animals|xp|arrows|boats|all> [radius|world]"
+invalid_entity_type: "&cUnknown entity type: &e{type}"
+world_not_found: "&cWorld not found!"
+killall_success: "&aRemoved entities (&e{type}&a): &e{count} &ain world &e{world}&a."

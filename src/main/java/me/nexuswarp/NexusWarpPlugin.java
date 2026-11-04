@@ -3,6 +3,7 @@ package me.nexuswarp;
 import me.nexuswarp.command.FlyCommand;
 import me.nexuswarp.command.HealCommand;
 import me.nexuswarp.command.HubCommand;
+import me.nexuswarp.command.KillAllCommand;
 import me.nexuswarp.command.KillCommand;
 import me.nexuswarp.command.ListCommand;
 import me.nexuswarp.command.MsgCommand;
@@ -169,6 +170,10 @@ public class NexusWarpPlugin extends JavaPlugin {
         registerCommand("fly", new FlyCommand(this));
         registerCommand("heal", new HealCommand(this));
         registerCommand("kill", new KillCommand(this));
+        KillAllCommand killAllCommand = new KillAllCommand(this);
+        registerCommand("killall", killAllCommand);
+        registerCommand("remove", killAllCommand);
+        registerCommand("butcher", killAllCommand);
         MuteCommand muteCommand = new MuteCommand(this);
         registerCommand("mute", muteCommand);
         registerCommand("unmute", muteCommand);

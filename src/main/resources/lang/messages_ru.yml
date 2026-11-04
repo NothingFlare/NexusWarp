@@ -175,3 +175,8 @@ uptime_time: "&7Время непрерывной работы: &a{time}"
 uptime_tps: "&7TPS (1м, 5м, 15м): {tps_1m}&7, {tps_5m}&7, {tps_15m}"
 uptime_memory: "&7Память: &a{used} МБ &7/ &e{total} МБ &7(Макс: &e{max} МБ&7, свободно: &b{free} МБ&7)"
 uptime_world_entry: "&7Мир &f\"{world}\"&7: чанков &e{chunks}&7, сущностей &e{entities}"
+
+usage_killall: "&cИспользование: &e/killall <drops|mobs|monsters|animals|xp|arrows|boats|all> [радиус|мир]"
+invalid_entity_type: "&cНеизвестный тип сущностей: &e{type}"
+world_not_found: "&cМир не найден!"
+killall_success: "&aУдалено сущностей (&e{type}&a): &e{count} &aв мире &e{world}&a."
