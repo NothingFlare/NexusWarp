@@ -33,6 +33,7 @@ import me.nexuswarp.config.LanguageManager;
 import me.nexuswarp.economy.Economy;
 import me.nexuswarp.economy.EconomyManager;
 import me.nexuswarp.economy.vault.VaultEconomyProvider;
+import me.nexuswarp.hook.papi.PlaceholderHookManager;
 import me.nexuswarp.listener.PlayerEventListener;
 import me.nexuswarp.manager.MessageManager;
 import me.nexuswarp.manager.TpaManager;
@@ -53,6 +54,7 @@ public class NexusWarpPlugin extends JavaPlugin {
     private MessageManager messageManager;
     private EconomyManager economyManager;
     private VaultEconomyProvider vaultProvider;
+    private PlaceholderHookManager placeholderHookManager;
 
     private ServerScheduler.TaskHandle tickerTask;
     private ServerScheduler.TaskHandle baltopTask;
@@ -79,6 +81,10 @@ public class NexusWarpPlugin extends JavaPlugin {
 
         // Register Vault Economy Provider
         setupVault();
+
+        // Register PlaceholderAPI expansion & hooks
+        this.placeholderHookManager = new PlaceholderHookManager(this);
+        this.placeholderHookManager.register();
 
         // Register event listener
         Bukkit.getPluginManager().registerEvents(new PlayerEventListener(this), this);
@@ -213,6 +219,11 @@ public class NexusWarpPlugin extends JavaPlugin {
             vaultProvider = null;
         }
 
+        if (placeholderHookManager != null) {
+            placeholderHookManager.unregister();
+            placeholderHookManager = null;
+        }
+
         if (economyManager != null) {
             economyManager.saveAllBlocking();
         }
@@ -285,5 +296,9 @@ public class NexusWarpPlugin extends JavaPlugin {
 
     public EconomyManager getEconomyManager() {
         return economyManager;
+    }
+
+    public PlaceholderHookManager getPlaceholderHookManager() {
+        return placeholderHookManager;
     }
 }

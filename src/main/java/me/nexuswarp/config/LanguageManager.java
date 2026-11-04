@@ -363,6 +363,14 @@ public class LanguageManager {
         return msg;
     }
 
+    public String getMessage(Player player, String key, String... placeholders) {
+        String msg = getMessage(key, placeholders);
+        if (player != null && plugin != null && plugin.getPlaceholderHookManager() != null) {
+            msg = plugin.getPlaceholderHookManager().setPlaceholders(player, msg);
+        }
+        return msg;
+    }
+
     public void sendTpaButtons(Player target, String requesterName) {
         if (target == null || !target.isOnline()) return;
 
